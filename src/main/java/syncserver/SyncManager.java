@@ -1,11 +1,12 @@
 package syncserver;
 
-import core.ClusterConnectionManager;
 import core.CustomWebSocketServer;
+import core.schedule.MainScheduler;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,11 +21,12 @@ public class SyncManager {
     }
 
     private final CustomWebSocketServer server;
-    private final ClusterConnectionManager clusterConnectionManager = new ClusterConnectionManager();
     private boolean started = false;
 
     private SyncManager() {
-        this.server = new CustomWebSocketServer(new InetSocketAddress(9998));
+        server = new CustomWebSocketServer(new InetSocketAddress(9998));
+        server.addConnectedHandler(new OnConnected());
+        server.addDisconnectedHandler(new OnDisconnected());
 
         Reflections reflections = new Reflections("syncserver/events");
         Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(SyncServerEvent.class);
@@ -49,6 +51,11 @@ public class SyncManager {
         started = true;
 
         this.server.start();
+        LOGGER.info("Waiting for clusters");
+    }
+
+    public CustomWebSocketServer getServer() {
+        return server;
     }
 
     private void addEvent(SyncServerFunction function) {

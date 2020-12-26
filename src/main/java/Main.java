@@ -1,12 +1,14 @@
-import core.CustomWebSocketClient;
-import org.json.JSONObject;
+import core.Console;
+import core.schedule.MainScheduler;
+import syncserver.ClusterConnectionManager;
 import syncserver.SyncManager;
 
-import java.net.URISyntaxException;
+import java.time.temporal.ChronoUnit;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException, URISyntaxException {
+    public static void main(String[] args) {
+        Console.getInstance().start();
         SyncManager.getInstance().start();
     }
 

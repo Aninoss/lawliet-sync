@@ -26,8 +26,9 @@ public class CustomWebSocketServer extends WebSocketServer {
     private final static Logger LOGGER = LoggerFactory.getLogger(CustomWebSocketServer.class);
     private final Random r = new Random();
 
-    private final HashMap<String, Function<JSONObject, JSONObject>> eventHandlers = new HashMap<>();
+    private final HashMap<String, BiFunction<String, JSONObject, JSONObject>> eventHandlers = new HashMap<>();
     private final ArrayList<BiFunction<String, ClientHandshake, Boolean>> connectedHandlers = new ArrayList<>();
+    private final ArrayList<Function<String, Boolean>> disconnectedHandlers = new ArrayList<>();
     private final HashMap<Integer, CompletableFuture<JSONObject>> outCache = new HashMap<>();
     private final BiMap<String, WebSocket> socketBiMap = HashBiMap.create();
 
@@ -52,7 +53,15 @@ public class CustomWebSocketServer extends WebSocketServer {
         connectedHandlers.remove(function);
     }
 
-    public void addEventHandler(String event, Function<JSONObject, JSONObject> eventFunction) {
+    public void addDisconnectedHandler(Function<String, Boolean> function) {
+        disconnectedHandlers.add(function);
+    }
+
+    public void removeDisconnectedHandler(Function<String, Boolean> function) {
+        disconnectedHandlers.remove(function);
+    }
+
+    public void addEventHandler(String event, BiFunction<String, JSONObject, JSONObject> eventFunction) {
         eventHandlers.put(event, eventFunction);
     }
 
@@ -60,18 +69,25 @@ public class CustomWebSocketServer extends WebSocketServer {
         eventHandlers.remove(event);
     }
 
-    public void removeEventHandler(String event, Function<JSONObject, JSONObject> eventFunction) {
+    public void removeEventHandler(String event, BiFunction<String, JSONObject, JSONObject> eventFunction) {
         eventHandlers.remove(event, eventFunction);
     }
 
     @Override
     public void onClose(WebSocket webSocket, int i, String s, boolean b) {
         LOGGER.info("Web socket disconnected");
-        socketBiMap.inverse().remove(webSocket);
+        String socketId = socketBiMap.inverse().remove(webSocket);
+        disconnectedHandlers.removeIf(disconnectedHandlerFunction -> disconnectedHandlerFunction.apply(socketId));
     }
 
     public boolean isConnected(String socketId) {
         return socketBiMap.containsKey(socketId);
+    }
+
+    public List<CompletableFuture<JSONObject>> sendBroadcast(String event, JSONObject content) {
+        ArrayList<CompletableFuture<JSONObject>> futureList = new ArrayList<>();
+        socketBiMap.values().forEach(webSocket -> futureList.add(send(webSocket, event, content)));
+        return futureList;
     }
 
     public CompletableFuture<JSONObject> sendSecure(String socketId, String event, JSONObject content) {
@@ -134,10 +150,10 @@ public class CustomWebSocketServer extends WebSocketServer {
             outCache.remove(requestId)
                     .complete(contentJson);
         } else {
-            Function<JSONObject, JSONObject> eventFunction = eventHandlers.get(event);
+            BiFunction<String, JSONObject, JSONObject> eventFunction = eventHandlers.get(event);
             if (eventFunction != null) {
                 Thread t = new CustomThread(() -> {
-                    JSONObject responseJson = eventFunction.apply(contentJson);
+                    JSONObject responseJson = eventFunction.apply(socketBiMap.inverse().get(webSocket), contentJson);
                     if (responseJson == null) responseJson = new JSONObject();
                     responseJson.put("request_id", requestId);
                     webSocket.send(event + "::" + responseJson.toString());
