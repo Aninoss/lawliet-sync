@@ -14,10 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -30,7 +27,7 @@ public class CustomWebSocketServer extends WebSocketServer {
     private final Random r = new Random();
 
     private final HashMap<String, Function<JSONObject, JSONObject>> eventHandlers = new HashMap<>();
-    private final ArrayList<Function<String, Boolean>> connectedHandlers = new ArrayList<>();
+    private final ArrayList<BiFunction<String, ClientHandshake, Boolean>> connectedHandlers = new ArrayList<>();
     private final HashMap<Integer, CompletableFuture<JSONObject>> outCache = new HashMap<>();
     private final BiMap<String, WebSocket> socketBiMap = HashBiMap.create();
 
@@ -43,15 +40,15 @@ public class CustomWebSocketServer extends WebSocketServer {
         LOGGER.info("Web socket connected");
         String socketId = clientHandshake.getFieldValue("socket_id");
         socketBiMap.put(socketId, webSocket);
-        connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId));
+        connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId, clientHandshake));
     }
 
     /* returns true if it should be removed immediately after */
-    public void addConnectedHandler(Function<String, Boolean> function) {
+    public void addConnectedHandler(BiFunction<String, ClientHandshake, Boolean> function) {
         connectedHandlers.add(function);
     }
 
-    public void removeConnectedHandler(Function<String, Boolean> function) {
+    public void removeConnectedHandler(BiFunction<String, ClientHandshake, Boolean> function) {
         connectedHandlers.remove(function);
     }
 
@@ -77,13 +74,13 @@ public class CustomWebSocketServer extends WebSocketServer {
         return socketBiMap.containsKey(socketId);
     }
 
-    public synchronized CompletableFuture<JSONObject> sendSecure(String socketId, String event, JSONObject content) {
+    public CompletableFuture<JSONObject> sendSecure(String socketId, String event, JSONObject content) {
         WebSocket webSocket = socketBiMap.get(socketId);
         if (webSocket != null) {
             return send(webSocket, event, content);
         } else {
             CompletableFuture<JSONObject> future = new CompletableFuture<>();
-            addConnectedHandler((sId) -> {
+            addConnectedHandler((sId, clientHandshake) -> {
                 if (sId.equals(socketId)) {
                     send(socketBiMap.get(socketId), event, content)
                             .exceptionally(e -> {
@@ -141,6 +138,7 @@ public class CustomWebSocketServer extends WebSocketServer {
             if (eventFunction != null) {
                 Thread t = new CustomThread(() -> {
                     JSONObject responseJson = eventFunction.apply(contentJson);
+                    if (responseJson == null) responseJson = new JSONObject();
                     responseJson.put("request_id", requestId);
                     webSocket.send(event + "::" + responseJson.toString());
                 }, "websocket_" + event);
@@ -154,6 +152,14 @@ public class CustomWebSocketServer extends WebSocketServer {
                 t.start();
             }
         }
+    }
+
+    public Set<String> getSocketIds() {
+        return socketBiMap.keySet();
+    }
+
+    public int size() {
+        return socketBiMap.size();
     }
 
     @Override

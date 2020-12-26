@@ -1,6 +1,6 @@
 package core.schedule;
 
-import core.TimeUtil;
+import core.util.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

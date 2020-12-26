@@ -31,6 +31,12 @@ public class CustomWebSocketClient extends WebSocketClient {
     private final HashMap<Integer, CompletableFuture<JSONObject>> outCache = new HashMap<>();
     private boolean connected = false;
 
+    public CustomWebSocketClient(String host, int port, String socketId, HashMap<String, String> httpHeaders) throws URISyntaxException {
+        super(new URI(String.format("ws://%s:%d", host, port)), new HashMap<String, String>(httpHeaders){{
+            put("socket_id", socketId);
+        }});
+    }
+
     public CustomWebSocketClient(String host, int port, String socketId) throws URISyntaxException {
         super(new URI(String.format("ws://%s:%d", host, port)), new HashMap<String, String>(){{
             put("socket_id", socketId);
@@ -95,7 +101,7 @@ public class CustomWebSocketClient extends WebSocketClient {
         }
     }
 
-    public synchronized CompletableFuture<JSONObject> sendSecure(String event, JSONObject content) {
+    public CompletableFuture<JSONObject> sendSecure(String event, JSONObject content) {
         if (isConnected()) {
             return send(event, content);
         } else {
