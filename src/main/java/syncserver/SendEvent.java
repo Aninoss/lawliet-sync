@@ -2,7 +2,10 @@ package syncserver;
 
 import org.json.JSONObject;
 
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class SendEvent {
 
@@ -19,6 +22,40 @@ public class SendEvent {
         dataJson.put("total_shards", totalShards);
 
         return SyncManager.getInstance().getServer().sendSecure(String.valueOf(clusterId), "START_CONNECTION", dataJson);
+    }
+
+    public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(long clusterId, long emojiId) {
+        return process(clusterId,
+                "CUSTOM_EMOJI",
+                Map.of("emoji_id", emojiId),
+                responseJson -> responseJson.has("tag") ? Optional.of(responseJson.getString("tag")) : Optional.empty()
+        );
+    }
+
+    public static CompletableFuture<Optional<String>> sendRequestServerName(long clusterId, long serverId) {
+        return process(clusterId,
+                "SERVER_NAME",
+                Map.of("server_id", serverId),
+                responseJson -> responseJson.has("name") ? Optional.of(responseJson.getString("name")) : Optional.empty()
+        );
+    }
+
+    private static <T> CompletableFuture<T> process(long clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+
+        JSONObject dataJson = new JSONObject();
+        jsonMap.keySet().forEach(k -> dataJson.put(k, jsonMap.get(k)));
+        SyncManager.getInstance().getServer().send(String.valueOf(clusterId), event, dataJson)
+                .exceptionally(e -> {
+                    future.completeExceptionally(e);
+                    return null;
+                })
+                .thenAccept(jsonResponse -> {
+                    T t = function.apply(jsonResponse);
+                    future.complete(t);
+                });
+
+        return future;
     }
 
 }

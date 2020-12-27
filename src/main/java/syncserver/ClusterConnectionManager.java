@@ -2,11 +2,13 @@ package syncserver;
 
 import core.CustomThread;
 import core.cache.DiscordRecommendedTotalShardsCache;
+import org.javacord.api.util.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 public class ClusterConnectionManager {
 
@@ -84,7 +86,7 @@ public class ClusterConnectionManager {
     }
 
     public synchronized void enqueueClusterConnection(Cluster cluster) {
-        if (!clusterConnectQueue.contains(cluster) && cluster.getShardInterval() != null && totalShards != null) {
+        if (!clusterConnectQueue.contains(cluster) && cluster.isActive() && totalShards != null) {
             clusterConnectQueue.add(cluster);
             if (clusterConnectQueueTaskThread == null || !clusterConnectQueueTaskThread.isAlive()) {
                 clusterConnectQueueTaskThread = new CustomThread(this::startClusterConnectTask, "cluster_connect", 1);
@@ -101,10 +103,36 @@ public class ClusterConnectionManager {
                 .sum();
     }
 
+    public Cluster getCluster(int clusterId) {
+        return clusterMap.get(clusterId);
+    }
+
     public List<Cluster> getClusters() {
         ArrayList<Cluster> clusters = new ArrayList<>(clusterMap.values());
         clusters.sort(Comparator.comparingInt(Cluster::getClusterId));
         return clusters;
+    }
+
+    public List<Cluster> getActiveClusters() {
+        return clusterMap.values().stream()
+                .filter(Cluster::isActive)
+                .sorted(Comparator.comparingInt(Cluster::getClusterId))
+                .collect(Collectors.toList());
+    }
+
+    public Cluster getResponsibleCluster(long serverId) {
+        int shard = getResponsibleShard(serverId);
+        for (Cluster cluster : getActiveClusters()) {
+            int[] shardInterval = cluster.getShardInterval();
+            if (shard >= shardInterval[0] && shard <= shardInterval[1])
+                return cluster;
+        }
+
+        throw new RuntimeException("Unknown error");
+    }
+
+    private int getResponsibleShard(long serverId) {
+        return Math.abs((int) ((serverId >> 22) % totalShards));
     }
 
     private void startClusterConnectTask() {
@@ -119,12 +147,13 @@ public class ClusterConnectionManager {
                     }
                     LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
                     cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
-                    SendEvent.sendExit(cluster.getClusterId());
+                    SendEvent.sendExit(cluster.getClusterId()).exceptionally(ExceptionLogger.get());
                     break;
 
                 case BOOTING_UP:
                     LOGGER.info("Connecting cluster {}", cluster.getClusterId());
-                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards);
+                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards)
+                            .exceptionally(ExceptionLogger.get());
                     while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.BOOTING_UP) {
                         try {
                             Thread.sleep(500);

@@ -3,6 +3,7 @@ package core;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import core.schedule.MainScheduler;
+import core.util.ExceptionUtil;
 import org.checkerframework.checker.units.qual.C;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -125,7 +126,12 @@ public class CustomWebSocketServer extends WebSocketServer {
         int id = r.nextInt();
 
         content.put("request_id", id);
-        webSocket.send(event + "::" + content.toString());
+        try {
+            webSocket.send(event + "::" + content.toString());
+        } catch (Throwable e) {
+            future.completeExceptionally(e);
+            return future;
+        }
         outCache.put(id, future);
 
         MainScheduler.getInstance().schedule(5, ChronoUnit.SECONDS, "websocket_" + event, () -> {
@@ -161,7 +167,8 @@ public class CustomWebSocketServer extends WebSocketServer {
 
                 MainScheduler.getInstance().schedule(2, ChronoUnit.SECONDS, "websocket_" + event + "_observer", () -> {
                     if (t.isAlive()) {
-                        LOGGER.error("websocket_" + event + " took too long to respond!");
+                        Exception e = ExceptionUtil.generateForStack(t);
+                        LOGGER.error("websocket_" + event + " took too long to respond!", e);
                         t.interrupt();
                     }
                 });

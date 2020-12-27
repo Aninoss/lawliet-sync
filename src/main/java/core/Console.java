@@ -1,5 +1,6 @@
 package core;
 
+import core.schedule.MainScheduler;
 import core.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,6 @@ public class Console {
 
     private void onQuit(String[] args) {
         LOGGER.info("EXIT - User commanded exit");
-        SystemUtil.backupDB();
         System.exit(0);
     }
 
@@ -115,12 +115,13 @@ public class Console {
                             } catch (Throwable throwable) {
                                 LOGGER.error("Console task {} endet with exception", args[0], throwable);
                             }
-                        }, "console_task", 1).start();
+                        }, "console_task_" + args[0], 1).start();
                     } else {
                         System.err.printf("No result for \"%s\"\n", args[0]);
                     }
                 }
-            } catch (IOException e) {
+                Thread.sleep(100);
+            } catch (IOException | InterruptedException e) {
                 LOGGER.error("Unexpected console exception", e);
             }
         }
