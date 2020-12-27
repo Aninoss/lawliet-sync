@@ -15,24 +15,12 @@ public class OnConnected implements BiFunction<String, ClientHandshake, Boolean>
         String[] parts = socketId.split("_");
         String type = parts[0];
         String id = parts[1];
-        switch (type) {
-            case ClientTypes.CLUSTER:
-                onTypeCluster(id, clientHandshake);
-                break;
 
-            case ClientTypes.WEB:
-                onTypeWeb(clientHandshake);
-                break;
-
-            default:
-                LOGGER.error("Unknown client type: " + type);
+        if (type.equals(ClientTypes.CLUSTER)) {
+            onTypeCluster(id, clientHandshake);
         }
 
         return false;
-    }
-
-    private void onTypeWeb(ClientHandshake clientHandshake) {
-        //TODO
     }
 
     private void onTypeCluster(String clusterId, ClientHandshake clientHandshake) {
