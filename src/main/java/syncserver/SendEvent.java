@@ -12,7 +12,7 @@ public class SendEvent {
     private SendEvent() {}
 
     public static CompletableFuture<JSONObject> sendExit(long clusterId) {
-        return SyncManager.getInstance().getServer().sendSecure(String.valueOf(clusterId), "EXIT", new JSONObject());
+        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "EXIT", new JSONObject());
     }
 
     public static CompletableFuture<JSONObject> sendStartConnection(long clusterId, int shardMin, int shardMax, int totalShards) {
@@ -21,7 +21,7 @@ public class SendEvent {
         dataJson.put("shard_max", shardMax);
         dataJson.put("total_shards", totalShards);
 
-        return SyncManager.getInstance().getServer().sendSecure(String.valueOf(clusterId), "START_CONNECTION", dataJson);
+        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "START_CONNECTION", dataJson);
     }
 
     public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(long clusterId, long emojiId) {
@@ -40,12 +40,20 @@ public class SendEvent {
         );
     }
 
+    public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
+        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
+    }
+
+    public static CompletableFuture<JSONObject> sendJSON(String event, long clusterId, JSONObject jsonObject) {
+        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
+    }
+
     private static <T> CompletableFuture<T> process(long clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
         CompletableFuture<T> future = new CompletableFuture<>();
 
         JSONObject dataJson = new JSONObject();
         jsonMap.keySet().forEach(k -> dataJson.put(k, jsonMap.get(k)));
-        SyncManager.getInstance().getServer().send(String.valueOf(clusterId), event, dataJson)
+        SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, dataJson)
                 .exceptionally(e -> {
                     future.completeExceptionally(e);
                     return null;

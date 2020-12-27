@@ -2,6 +2,7 @@ package syncserver;
 
 import core.CustomThread;
 import core.cache.DiscordRecommendedTotalShardsCache;
+import core.util.StringUtil;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,20 @@ public class ClusterConnectionManager {
                 .sum();
     }
 
+    public Optional<Long> getGlobalServerSize() {
+        long globalServerSize = 0;
+        for(Cluster cluster : ClusterConnectionManager.getInstance().getClusters()) {
+            if (cluster.isActive() || cluster.getLocalServerSize().isPresent()) {
+                if (cluster.getLocalServerSize().isEmpty()) {
+                    globalServerSize = 0;
+                    break;
+                }
+                globalServerSize += cluster.getLocalServerSize().get();
+            }
+        }
+        return globalServerSize > 0 ? Optional.of(globalServerSize) : Optional.empty();
+    }
+
     public Cluster getCluster(int clusterId) {
         return clusterMap.get(clusterId);
     }
@@ -118,6 +133,12 @@ public class ClusterConnectionManager {
                 .filter(Cluster::isActive)
                 .sorted(Comparator.comparingInt(Cluster::getClusterId))
                 .collect(Collectors.toList());
+    }
+
+    public Optional<Cluster> getFirstFullyConnectedCluster() {
+        return clusterMap.values().stream()
+                .filter(c -> c.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED)
+                .findFirst();
     }
 
     public Cluster getResponsibleCluster(long serverId) {
@@ -147,7 +168,7 @@ public class ClusterConnectionManager {
                     }
                     LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
                     cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
-                    SendEvent.sendExit(cluster.getClusterId()).exceptionally(ExceptionLogger.get());
+                    SendEvent.sendExit(cluster.getClusterId());
                     break;
 
                 case BOOTING_UP:

@@ -10,7 +10,7 @@ public class OnClusterFullyConnected implements SyncServerFunction {
 
     @Override
     public JSONObject apply(String socketId, JSONObject jsonObject) {
-        int clusterId = Integer.parseInt(socketId);
+        int clusterId = Integer.parseInt(socketId.split("_")[1]);
         ClusterConnectionManager.getInstance().connected(clusterId);
         return null;
     }

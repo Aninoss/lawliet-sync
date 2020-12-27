@@ -1,0 +1,8 @@
+package syncserver;
+
+public interface ClientTypes {
+
+    String CLUSTER = "cluster";
+    String WEB = "web";
+
+}

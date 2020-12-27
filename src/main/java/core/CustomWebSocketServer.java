@@ -85,9 +85,12 @@ public class CustomWebSocketServer extends WebSocketServer {
         return socketBiMap.containsKey(socketId);
     }
 
-    public List<CompletableFuture<JSONObject>> sendBroadcast(String event, JSONObject content) {
+    public List<CompletableFuture<JSONObject>> sendBroadcast(String event, JSONObject content, String... excludedSockets) {
         ArrayList<CompletableFuture<JSONObject>> futureList = new ArrayList<>();
-        socketBiMap.values().forEach(webSocket -> futureList.add(send(webSocket, event, content)));
+        socketBiMap.keySet().stream()
+                .filter(socketId -> Arrays.stream(excludedSockets).noneMatch(socketId::equals))
+                .map(socketBiMap::get)
+                .forEach(webSocket -> futureList.add(send(webSocket, event, content)));
         return futureList;
     }
 

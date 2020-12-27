@@ -11,7 +11,7 @@ public class OnGlobalServerSize implements SyncServerFunction {
 
     @Override
     public JSONObject apply(String socketId, JSONObject jsonObject) {
-        int clusterId = Integer.parseInt(socketId);
+        int clusterId = Integer.parseInt(socketId.split("_")[1]);
         long localServerSize = jsonObject.getLong("local_server_size");
         long globalServerSize = 0;
         JSONObject responseJson = new JSONObject();

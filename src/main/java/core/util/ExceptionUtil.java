@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class ExceptionUtil {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(ExceptionUtil.class);
+    private ExceptionUtil() {}
 
     public static Exception generateForStack(Thread t) {
         Exception e = new Exception("Stack Trace");

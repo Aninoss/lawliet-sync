@@ -8,6 +8,8 @@ public class SystemUtil {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SystemUtil.class);
 
+    private SystemUtil() {}
+
     public static int executeProcess(String... command) {
         ProcessBuilder pb = new ProcessBuilder(command);
         try {
