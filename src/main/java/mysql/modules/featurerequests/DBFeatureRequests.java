@@ -11,7 +11,7 @@ public class DBFeatureRequests {
     public static ArrayList<FREntryBean> fetchEntries(long userId, FRPanelType type) {
         ArrayList<FREntryBean> list = new ArrayList<>();
 
-        String sql = "SELECT id, public, title, description, COUNT(`boostDatetime`) AS `boosts`, date\n" +
+        String sql = "SELECT id, public, title, description, COUNT(`boostDatetime`) AS `boosts`, date, SUM(IFNULL(`boostDatetime` >= NOW() - INTERVAL 1 WEEK, 0)) AS `recentBoosts`\n" +
                 "FROM FeatureRequests\n" +
                 "LEFT JOIN FeatureRequestBoosts USING (`id`)\n" +
                 "WHERE `type` = ? AND (`public` = 1 OR `userId` = ?)\n" +
@@ -32,7 +32,8 @@ public class DBFeatureRequests {
                         resultSet.getString(3),
                         resultSet.getString(4),
                         resultSet.getInt(5),
-                        resultSet.getDate(6).toLocalDate()
+                        resultSet.getDate(6).toLocalDate(),
+                        resultSet.getInt(7)
                 ));
             }
 

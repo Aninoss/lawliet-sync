@@ -8,15 +8,13 @@ import java.util.function.BiFunction;
 
 public class OnConnected implements BiFunction<String, ClientHandshake, Boolean> {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(OnConnected.class);
-
     @Override
     public Boolean apply(String socketId, ClientHandshake clientHandshake) {
         String[] parts = socketId.split("_");
         String type = parts[0];
-        String id = parts[1];
 
         if (type.equals(ClientTypes.CLUSTER)) {
+            String id = parts[1];
             onTypeCluster(id, clientHandshake);
         }
 

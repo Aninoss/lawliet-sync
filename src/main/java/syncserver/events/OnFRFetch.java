@@ -6,6 +6,7 @@ import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FRPanelType;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 
@@ -40,6 +41,7 @@ public class OnFRFetch implements SyncServerFunction {
                         .put("description", frEntry.getDescription())
                         .put("public", frEntry.isPublicEntry())
                         .put("boosts", frEntry.getBoosts())
+                        .put("recent_boosts", frEntry.getRecentBoosts())
                         .put("type", type.name())
                         .put("date", frEntry.getDate().toEpochDay());
                 jsonEntriesArray.put(jsonEntry);

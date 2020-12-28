@@ -9,7 +9,8 @@ import java.util.function.Function;
 
 public class SendEvent {
 
-    private SendEvent() {}
+    private SendEvent() {
+    }
 
     public static CompletableFuture<JSONObject> sendExit(long clusterId) {
         return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "EXIT", new JSONObject());
@@ -25,7 +26,8 @@ public class SendEvent {
     }
 
     public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(long clusterId, long emojiId) {
-        return process(clusterId,
+        return process(
+                clusterId,
                 "CUSTOM_EMOJI",
                 Map.of("emoji_id", emojiId),
                 responseJson -> responseJson.has("tag") ? Optional.of(responseJson.getString("tag")) : Optional.empty()
@@ -33,18 +35,32 @@ public class SendEvent {
     }
 
     public static CompletableFuture<Optional<String>> sendRequestServerName(long clusterId, long serverId) {
-        return process(clusterId,
+        return process(
+                clusterId,
                 "SERVER_NAME",
                 Map.of("server_id", serverId),
                 responseJson -> responseJson.has("name") ? Optional.of(responseJson.getString("name")) : Optional.empty()
         );
     }
 
-    public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
-        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
+    public static CompletableFuture<JSONObject> sendUserNotification(long clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer) {
+        JSONObject dataJson = new JSONObject();
+        dataJson.put("user_id", userId)
+                .put("title", title)
+                .put("description", description)
+                .put("author", author)
+                .put("thumbnail", thumbnail)
+                .put("image", image)
+                .put("footer", footer);
+
+        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "NOTIFY", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendJSON(String event, long clusterId, JSONObject jsonObject) {
+    public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
+        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
+    }
+
+    public static CompletableFuture<JSONObject> sendJSONSecure(String event, long clusterId, JSONObject jsonObject) {
         return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
     }
 

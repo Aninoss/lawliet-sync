@@ -8,14 +8,16 @@ public class FREntryBean {
     private final boolean publicEntry;
     private final String description, title;
     private final int boosts;
+    private final int recentBoosts;
     private final LocalDate date;
 
-    public FREntryBean(int id, boolean publicEntry, String title, String description, int boosts, LocalDate date) {
+    public FREntryBean(int id, boolean publicEntry, String title, String description, int boosts, LocalDate date, int recentBoosts) {
         this.id = id;
         this.publicEntry = publicEntry;
         this.title = title;
         this.description = description;
         this.boosts = boosts;
+        this.recentBoosts = recentBoosts;
         this.date = date;
     }
 
@@ -41,6 +43,10 @@ public class FREntryBean {
 
     public LocalDate getDate() {
         return date;
+    }
+
+    public int getRecentBoosts() {
+        return recentBoosts;
     }
 
 }

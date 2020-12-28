@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 public class ClusterConnectionManager {
 
+    public final static long OWNER_ID = 272037078919938058L;
     private final static Logger LOGGER = LoggerFactory.getLogger(ClusterConnectionManager.class);
 
     private static final ClusterConnectionManager ourInstance = new ClusterConnectionManager();

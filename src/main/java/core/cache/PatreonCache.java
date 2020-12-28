@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import syncserver.ClusterConnectionManager;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -52,7 +54,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
     }
 
     public int getUserTier(long userId) {
-        if (userId == 272037078919938058L)
+        if (userId == ClusterConnectionManager.OWNER_ID)
             return 6;
 
         return getAsync().getOrDefault(userId, 0);

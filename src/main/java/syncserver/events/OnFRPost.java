@@ -3,6 +3,8 @@ package syncserver.events;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.json.JSONObject;
+import syncserver.ClusterConnectionManager;
+import syncserver.SendEvent;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 
@@ -17,8 +19,19 @@ public class OnFRPost implements SyncServerFunction {
         boolean notify = requestJSON.getBoolean("notify");
 
         DBFeatureRequests.postFeatureRequest(userId, title, desc);
+        ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
+            SendEvent.sendUserNotification(
+                    cluster.getClusterId(),
+                    ClusterConnectionManager.OWNER_ID,
+                    title,
+                    desc,
+                    "FEATURE REQUEST",
+                    null,
+                    null,
+                    notify ? String.valueOf(userId) : null
+            );
+        });
 
-        //TODO Notify Owner
         return new JSONObject();
     }
 
