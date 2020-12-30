@@ -43,6 +43,7 @@ public class Console {
         tasks.put("threads_stop", this::onThreadStop);
         tasks.put("backup", this::onBackup);
         tasks.put("start", this::onStart);
+        tasks.put("restart", this::onRestart);
         tasks.put("clusters", this::onClusters);
     }
 
@@ -50,6 +51,10 @@ public class Console {
         ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
             LOGGER.info("Cluster {}: {}", cluster.getClusterId(), cluster.getConnectionStatus().toString());
         });
+    }
+
+    private void onRestart(String[] args) {
+        ClusterConnectionManager.getInstance().restart();
     }
 
     private void onStart(String[] args) {

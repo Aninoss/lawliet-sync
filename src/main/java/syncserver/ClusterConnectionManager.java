@@ -2,7 +2,6 @@ package syncserver;
 
 import core.CustomThread;
 import core.cache.DiscordRecommendedTotalShardsCache;
-import core.util.StringUtil;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +28,7 @@ public class ClusterConnectionManager {
     private final ConcurrentLinkedQueue<Cluster> clusterConnectQueue = new ConcurrentLinkedQueue<>();
     private CustomThread clusterConnectQueueTaskThread = null;
     private Integer totalShards = null;
+    private boolean sendBlockShards = false;
 
     public void register(int clusterId, int size) {
         LOGGER.info("Adding unconnected cluster with id: {}, size: {}, alreadyPresent: {}", clusterId, size, clusterMap.containsKey(clusterId));
@@ -63,7 +63,12 @@ public class ClusterConnectionManager {
     }
 
     public void start() {
-        totalShards = DiscordRecommendedTotalShardsCache.getInstance().getAsync();
+        int totalShards = DiscordRecommendedTotalShardsCache.getInstance().getAsync();
+        if (this.totalShards != null && this.totalShards != totalShards) {
+            LOGGER.info("Shard size has changed");
+        }
+        this.totalShards = totalShards;
+        this.sendBlockShards = true;
         LOGGER.info("Starting clusters with total shard size of {}", totalShards);
         List<Cluster> clusters = getClusters();
 
@@ -84,6 +89,15 @@ public class ClusterConnectionManager {
             LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1]);
             enqueueClusterConnection(cluster);
             shift += area;
+        }
+    }
+
+    public void restart() {
+        if (totalShards == null) {
+            start();
+        } else {
+            LOGGER.info("Restarting clusters with total shard size of {}", totalShards);
+            getActiveClusters().forEach(this::enqueueClusterConnection);
         }
     }
 
@@ -159,21 +173,35 @@ public class ClusterConnectionManager {
 
     private void startClusterConnectTask() {
         Cluster cluster;
-        while ((cluster = clusterConnectQueue.poll()) != null) {
+        while ((cluster = clusterConnectQueue.peek()) != null) {
             switch (cluster.getConnectionStatus()) {
                 case FULLY_CONNECTED:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         LOGGER.error("Interrupted", e);
                     }
                     LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
                     cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
                     SendEvent.sendExit(cluster.getClusterId());
-                    break;
+                    while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.OFFLINE) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            LOGGER.error("Interrupted", e);
+                        }
+                    }
 
                 case BOOTING_UP:
                     LOGGER.info("Connecting cluster {}", cluster.getClusterId());
+
+                    if (sendBlockShards) {
+                        Cluster finalCluster = cluster;
+                        ClusterConnectionManager.getInstance().getActiveClusters().stream()
+                                .filter(c -> c.getClusterId() > finalCluster.getClusterId())
+                                .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, finalCluster.getShardInterval()[0], finalCluster.getShardInterval()[1]).exceptionally(ExceptionLogger.get()));
+                    }
+
                     SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards)
                             .exceptionally(ExceptionLogger.get());
                     while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.BOOTING_UP) {
@@ -187,7 +215,7 @@ public class ClusterConnectionManager {
 
                 case OFFLINE:
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         LOGGER.error("Interrupted", e);
                     }
@@ -196,7 +224,9 @@ public class ClusterConnectionManager {
                 default:
                     throw new NoSuchElementException("Invalid connection status");
             }
+            clusterConnectQueue.poll();
         }
+        sendBlockShards = false;
     }
 
 }

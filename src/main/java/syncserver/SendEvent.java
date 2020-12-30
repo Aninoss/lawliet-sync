@@ -56,6 +56,14 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "NOTIFY", dataJson);
     }
 
+    public static CompletableFuture<JSONObject> sendBlockShards(long clusterId, int totalShards, int shardsMin, int shardsMax) {
+        JSONObject dataJson = new JSONObject();
+        dataJson.put("total_shards", totalShards);
+        dataJson.put("shards_min", shardsMin);
+        dataJson.put("shards_max", shardsMax);
+        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "BLOCK_SHARDS", dataJson);
+    }
+
     public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
     }

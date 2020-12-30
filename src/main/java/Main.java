@@ -3,7 +3,6 @@ import core.Program;
 import core.cache.PatreonCache;
 import mysql.DBMain;
 import syncserver.SyncManager;
-
 import java.sql.SQLException;
 
 public class Main {

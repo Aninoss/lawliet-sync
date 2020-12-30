@@ -39,8 +39,8 @@ public class CustomWebSocketServer extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
-        LOGGER.info("Web socket connected");
         String socketId = clientHandshake.getFieldValue("socket_id");
+        LOGGER.info(socketId + " connected");
         socketBiMap.put(socketId, webSocket);
         connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId, clientHandshake));
     }
@@ -172,7 +172,6 @@ public class CustomWebSocketServer extends WebSocketServer {
                     if (t.isAlive()) {
                         Exception e = ExceptionUtil.generateForStack(t);
                         LOGGER.error("websocket_" + event + " took too long to respond!", e);
-                        t.interrupt();
                     }
                 });
                 t.start();
