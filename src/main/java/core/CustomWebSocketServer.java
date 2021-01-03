@@ -11,10 +11,13 @@ import org.java_websocket.server.WebSocketServer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -35,6 +38,14 @@ public class CustomWebSocketServer extends WebSocketServer {
 
     public CustomWebSocketServer(InetSocketAddress address) {
         super(address);
+        setReuseAddr(true);
+        Runtime.getRuntime().addShutdownHook(new CustomThread(() -> {
+            try {
+                stop();
+            } catch (IOException | InterruptedException e) {
+                LOGGER.error("Socket disconnect error");
+            }
+        }, "shutdown_serverstop"));
     }
 
     @Override
@@ -190,6 +201,7 @@ public class CustomWebSocketServer extends WebSocketServer {
     @Override
     public void onError(WebSocket webSocket, Exception ex) {
         LOGGER.error("Web socket error", ex);
+        MainScheduler.getInstance().schedule(5, ChronoUnit.SECONDS, "reconnect", this::start);
     }
 
     @Override

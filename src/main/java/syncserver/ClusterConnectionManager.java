@@ -30,14 +30,14 @@ public class ClusterConnectionManager {
     private Integer totalShards = null;
     private boolean sendBlockShards = false;
 
-    public void register(int clusterId, int size) {
+    public synchronized void register(int clusterId, int size) {
         LOGGER.info("Adding unconnected cluster with id: {}, size: {}, alreadyPresent: {}", clusterId, size, clusterMap.containsKey(clusterId));
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, size));
         cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
         enqueueClusterConnection(cluster);
     }
 
-    public void registerAlreadyConnected(int clusterId, int size, int shardMin, int shardMax, int totalShards) {
+    public synchronized void registerAlreadyConnected(int clusterId, int size, int shardMin, int shardMax, int totalShards) {
         LOGGER.info("Adding connected cluster with id: {}, size: {}, alreadyPresent: {}", clusterId, size, clusterMap.containsKey(clusterId));
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, size));
         cluster.setShardInterval(new int[] { shardMin, shardMax });
@@ -167,7 +167,7 @@ public class ClusterConnectionManager {
         throw new RuntimeException("Unknown error");
     }
 
-    private int getResponsibleShard(long serverId) {
+    public int getResponsibleShard(long serverId) {
         return Math.abs((int) ((serverId >> 22) % totalShards));
     }
 

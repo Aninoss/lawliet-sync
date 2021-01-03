@@ -113,9 +113,12 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             JSONObject attributesJson = slotJson.getJSONObject("attributes");
             if (!attributesJson.isNull("patron_status") && attributesJson.getString("patron_status").equals("active_patron")) {
                 JSONObject relationshipsJson = slotJson.getJSONObject("relationships");
-                String id = relationshipsJson.getJSONObject("user").getJSONObject("data").getString("id");
-                String tierId = relationshipsJson.getJSONObject("currently_entitled_tiers").getJSONArray("data").getJSONObject(0).getString("id");
-                patreonTiers.put(id, TIER_MAP.get(tierId));
+                JSONArray entitledTiers = relationshipsJson.getJSONObject("currently_entitled_tiers").getJSONArray("data");
+                if (entitledTiers.length() > 0) {
+                    String id = relationshipsJson.getJSONObject("user").getJSONObject("data").getString("id");
+                    String tierId = entitledTiers.getJSONObject(0).getString("id");
+                    patreonTiers.put(id, TIER_MAP.get(tierId));
+                }
             }
         }
         return patreonTiers;

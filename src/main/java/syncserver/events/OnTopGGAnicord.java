@@ -11,7 +11,7 @@ public class OnTopGGAnicord implements SyncServerFunction {
     public JSONObject apply(String socketId, JSONObject dataJson) {
         long serverId = dataJson.getLong("guild");
         Cluster cluster = ClusterConnectionManager.getInstance().getResponsibleCluster(serverId);
-        SendEvent.sendJSONSecure("TOPGG", cluster.getClusterId(), dataJson).exceptionally(ExceptionLogger.get());
+        SendEvent.sendJSONSecure("TOPGG_ANICORD", cluster.getClusterId(), dataJson).exceptionally(ExceptionLogger.get());
         return null;
     }
 

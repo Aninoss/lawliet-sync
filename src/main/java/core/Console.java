@@ -45,6 +45,14 @@ public class Console {
         tasks.put("start", this::onStart);
         tasks.put("restart", this::onRestart);
         tasks.put("clusters", this::onClusters);
+        tasks.put("server", this::onServer);
+    }
+
+    private void onServer(String[] args) {
+        long serverId = Long.parseLong(args[1]);
+        int cluster = ClusterConnectionManager.getInstance().getResponsibleCluster(serverId).getClusterId();
+        int shard = ClusterConnectionManager.getInstance().getResponsibleShard(serverId);
+        LOGGER.info("Server: {}; Cluster: {}; Shard: {}", serverId, cluster, shard);
     }
 
     private void onClusters(String[] args) {
