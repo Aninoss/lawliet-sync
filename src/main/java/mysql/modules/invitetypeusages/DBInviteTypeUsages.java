@@ -11,9 +11,8 @@ public class DBInviteTypeUsages {
 
     public void insertInvite(InviteTypes inviteType) {
         DBMain.getInstance().asyncUpdate("INSERT INTO InviteTypeUsages (`type`, `usages`) VALUES (?, 1) ON DUPLICATE KEY UPDATE `usages` = `usages` + 1;",
-                preparedStatement -> {
-                    preparedStatement.setString(1, inviteType.name());
-                });
+                preparedStatement -> preparedStatement.setString(1, inviteType.name())
+        );
     }
 
 }
