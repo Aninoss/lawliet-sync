@@ -3,7 +3,6 @@ package mysql;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import core.Program;
 import core.SecretManager;
-import core.TaskQueue;
 import mysql.interfaces.SQLConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

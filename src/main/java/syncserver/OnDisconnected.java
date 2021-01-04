@@ -6,12 +6,14 @@ public class OnDisconnected implements Function<String, Boolean> {
 
     @Override
     public Boolean apply(String socketId) {
-        String[] parts = socketId.split("_");
-        String type = parts[0];
+        if (socketId != null) {
+            String[] parts = socketId.split("_");
+            String type = parts[0];
 
-        if (type.equals(ClientTypes.CLUSTER)) {
-            String id = parts[1];
-            ClusterConnectionManager.getInstance().unregister(Integer.parseInt(id));
+            if (type.equals(ClientTypes.CLUSTER)) {
+                String id = parts[1];
+                ClusterConnectionManager.getInstance().unregister(Integer.parseInt(id));
+            }
         }
         return false;
     }

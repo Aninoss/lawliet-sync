@@ -20,6 +20,8 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -51,9 +53,15 @@ public class CustomWebSocketServer extends WebSocketServer {
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
         String socketId = clientHandshake.getFieldValue("socket_id");
-        LOGGER.info(socketId + " connected");
-        socketBiMap.put(socketId, webSocket);
-        connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId, clientHandshake));
+        String auth = clientHandshake.getFieldValue("auth");
+        if (SecretManager.getString("syncserver.auth").equals(auth)) {
+            LOGGER.info(socketId + " connected");
+            socketBiMap.put(socketId, webSocket);
+            connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId, clientHandshake));
+        } else {
+            LOGGER.warn("Unauthorized client: {}", socketId);
+            webSocket.close();
+        }
     }
 
     /* returns true if it should be removed immediately after */
@@ -172,20 +180,27 @@ public class CustomWebSocketServer extends WebSocketServer {
         } else {
             BiFunction<String, JSONObject, JSONObject> eventFunction = eventHandlers.get(event);
             if (eventFunction != null) {
-                Thread t = new CustomThread(() -> {
+                AtomicBoolean completed = new AtomicBoolean(false);
+                AtomicReference<Thread> t = new AtomicReference<>();
+
+                GlobalThreadPool.getExecutorService().submit(() -> {
+                    t.set(Thread.currentThread());
+
                     JSONObject responseJson = eventFunction.apply(socketBiMap.inverse().get(webSocket), contentJson);
-                    if (responseJson == null) responseJson = new JSONObject();
+                    if (responseJson == null)
+                        responseJson = new JSONObject();
+
                     responseJson.put("request_id", requestId);
                     webSocket.send(event + "::" + responseJson.toString());
-                }, "websocket_" + event);
+                    completed.set(true);
+                });
 
-                MainScheduler.getInstance().schedule(2, ChronoUnit.SECONDS, "websocket_" + event + "_observer", () -> {
-                    if (t.isAlive()) {
-                        Exception e = ExceptionUtil.generateForStack(t);
-                        LOGGER.error("websocket_" + event + " took too long to respond!", e);
+                MainScheduler.getInstance().schedule(5, ChronoUnit.SECONDS, "websocket_" + event + "_observer", () -> {
+                    if (!completed.get()) {
+                        Exception e = ExceptionUtil.generateForStack(t.get());
+                        LOGGER.error("websocket_" + event + " took too long to process!", e);
                     }
                 });
-                t.start();
             }
         }
     }

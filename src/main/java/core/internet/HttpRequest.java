@@ -1,6 +1,6 @@
 package core.internet;
 
-import core.CustomThread;
+import core.GlobalThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.net.ssl.HttpsURLConnection;
@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 public class HttpRequest {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HttpRequest.class);
-    private static final String USER_AGENT = "Lawliet Discord Bot";
+    private static final String USER_AGENT = "Lawliet Discord Bot made by Aninoss";
 
     public static CompletableFuture<HttpResponse> getData(String urlString, HttpProperty... headers) {
         return getData(urlString, "GET", 0, null, headers);
@@ -39,7 +39,7 @@ public class HttpRequest {
 
     public static CompletableFuture<HttpResponse> getData(String urlString, String method, int pauseTimeMilis, String body, HttpProperty... headers) {
         CompletableFuture<HttpResponse> future = new CompletableFuture<>();
-        new CustomThread(() -> download(future, urlString, method, pauseTimeMilis, body, headers), "download_url").start();
+        GlobalThreadPool.getExecutorService().submit(() -> download(future, urlString, method, pauseTimeMilis, body, headers));
         return future;
     }
 

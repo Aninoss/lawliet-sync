@@ -1,9 +1,8 @@
 package core.cache;
 
-import core.CustomThread;
+import core.GlobalThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -28,7 +27,7 @@ public abstract class SingleCache <T> {
 
         if (nextReset == null || Instant.now().isAfter(nextReset)) {
             resetUpdateTimer();
-            new CustomThread(this::fetch, "singlecache_refresh", 1).start();
+            GlobalThreadPool.getExecutorService().submit(this::fetch);
         }
 
         return value;
