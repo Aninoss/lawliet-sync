@@ -46,6 +46,13 @@ public class Console {
         tasks.put("restart", this::onRestart);
         tasks.put("clusters", this::onClusters);
         tasks.put("server", this::onServer);
+        tasks.put("ratelimit", this::onRatelimit);
+    }
+
+    private void onRatelimit(String[] args) {
+        long intervalTimeNanos = Long.parseLong(args[1]);
+        SyncedRatelimitManager.getInstance().setIntervalTimeNanos(intervalTimeNanos);
+        LOGGER.info("Synced ratelimit interval set to: {} ms", intervalTimeNanos / 1000000.0);
     }
 
     private void onServer(String[] args) {
