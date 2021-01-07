@@ -148,6 +148,7 @@ public class CustomWebSocketServer extends WebSocketServer {
         int id = r.nextInt();
 
         content.put("request_id", id);
+        content.put("is_response", false);
         try {
             webSocket.send(event + "::" + content.toString());
         } catch (Throwable e) {
@@ -159,7 +160,7 @@ public class CustomWebSocketServer extends WebSocketServer {
         MainScheduler.getInstance().schedule(5, ChronoUnit.SECONDS, "websocket_" + event, () -> {
             if (outCache.containsKey(id)) {
                 outCache.remove(id)
-                        .completeExceptionally(new SocketTimeoutException("No response"));
+                        .completeExceptionally(new SocketTimeoutException("No response in " + socketBiMap.inverse().get(webSocket)));
             }
         });
 
@@ -172,9 +173,12 @@ public class CustomWebSocketServer extends WebSocketServer {
         JSONObject contentJson = new JSONObject(message.substring(event.length() + 2));
         
         int requestId = contentJson.getInt("request_id");
-        contentJson.remove("request_id");
-        
-        if (outCache.containsKey(requestId)) {
+        boolean isResponse = outCache.containsKey(requestId); //TODO remove later
+        if (contentJson.has("is_response")) {
+            isResponse = contentJson.getBoolean("is_response");
+        }
+
+        if (isResponse) {
             outCache.remove(requestId)
                     .complete(contentJson);
         } else {
@@ -191,6 +195,7 @@ public class CustomWebSocketServer extends WebSocketServer {
                         responseJson = new JSONObject();
 
                     responseJson.put("request_id", requestId);
+                    responseJson.put("is_response", true);
                     webSocket.send(event + "::" + responseJson.toString());
                     completed.set(true);
                 });
