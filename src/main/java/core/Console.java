@@ -64,7 +64,7 @@ public class Console {
 
     private void onClusters(String[] args) {
         ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
-            LOGGER.info("Cluster {}: {}", cluster.getClusterId(), cluster.getConnectionStatus().toString());
+            LOGGER.info("Cluster {}: {} ({} servers)", cluster.getClusterId(), cluster.getConnectionStatus().toString(), cluster.getLocalServerSize().orElse(0L));
         });
     }
 

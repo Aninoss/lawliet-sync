@@ -68,6 +68,10 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
     }
 
+    public static CompletableFuture<JSONObject> sendJSON(String event, long clusterId, JSONObject jsonObject) {
+        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
+    }
+
     public static CompletableFuture<JSONObject> sendJSONSecure(String event, long clusterId, JSONObject jsonObject) {
         return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
     }

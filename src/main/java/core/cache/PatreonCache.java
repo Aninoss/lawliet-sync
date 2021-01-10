@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.ClusterConnectionManager;
+import syncserver.SendEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
                 HashMap<Long, Integer> userTiers = new HashMap<>();
                 fetchFromUrl("https://www.patreon.com/api/oauth2/v2/campaigns/3334056/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=full_name,patron_status&fields%5Buser%5D=social_connections&page%5Bsize%5D=9999", userTiers);
                 LOGGER.info("Patreon update completed with {} users", userTiers.size());
+
                 return userTiers;
             } catch (ExecutionException | InterruptedException e) {
                 LOGGER.error("Could not fetch patreon data", e);
@@ -71,6 +73,11 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
                 userTiersMapCombined.put(userId, p.getTier());
         });
         return userTiersMapCombined;
+    }
+
+    @Override
+    protected int getRefreshRateMinutes() {
+        return 5;
     }
 
     private void fetchFromUrl(String url, HashMap<Long, Integer> userTiers) throws ExecutionException, InterruptedException {
@@ -122,6 +129,21 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             }
         }
         return patreonTiers;
+    }
+
+    public static JSONObject jsonFromUserPatreonMap(HashMap<Long, Integer> userTiersMap) {
+        JSONObject responseJson = new JSONObject();
+        JSONArray usersArray = new JSONArray();
+
+        userTiersMap.forEach((userId, tier) -> {
+            JSONObject userJson = new JSONObject();
+            userJson.put("user_id", userId);
+            userJson.put("tier", tier);
+            usersArray.put(userJson);
+        });
+
+        responseJson.put("users", usersArray);
+        return responseJson;
     }
 
 }

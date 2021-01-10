@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ClusterConnectionManager {
@@ -25,16 +28,14 @@ public class ClusterConnectionManager {
     }
 
     private final HashMap<Integer, Cluster> clusterMap = new HashMap<>();
-    private final ConcurrentLinkedQueue<Cluster> clusterConnectQueue = new ConcurrentLinkedQueue<>();
-    private CustomThread clusterConnectQueueTaskThread = null;
+    private final ExecutorService connectorService = Executors.newSingleThreadExecutor();
     private Integer totalShards = null;
-    private boolean sendBlockShards = false;
 
     public synchronized void register(int clusterId, int size) {
         LOGGER.info("Adding unconnected cluster with id: {}, size: {}, alreadyPresent: {}", clusterId, size, clusterMap.containsKey(clusterId));
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, size));
         cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
-        enqueueClusterConnection(cluster);
+        submitConnectCluster(cluster, false, false);
     }
 
     public synchronized void registerAlreadyConnected(int clusterId, int size, int shardMin, int shardMax, int totalShards) {
@@ -68,7 +69,6 @@ public class ClusterConnectionManager {
             LOGGER.info("Shard size has changed");
         }
         this.totalShards = totalShards;
-        this.sendBlockShards = true;
         LOGGER.info("Starting clusters with total shard size of {}", totalShards);
         List<Cluster> clusters = getClusters();
 
@@ -87,7 +87,7 @@ public class ClusterConnectionManager {
             int shardMax = shift + area - 1;
             cluster.setShardInterval(new int[]{ shardMin, shardMax });
             LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1]);
-            enqueueClusterConnection(cluster);
+            submitConnectCluster(cluster, true, true);
             shift += area;
         }
     }
@@ -97,16 +97,50 @@ public class ClusterConnectionManager {
             start();
         } else {
             LOGGER.info("Restarting clusters with total shard size of {}", totalShards);
-            getActiveClusters().forEach(this::enqueueClusterConnection);
+            getActiveClusters().forEach(cluster -> submitConnectCluster(cluster, true, false));
         }
     }
 
-    public synchronized void enqueueClusterConnection(Cluster cluster) {
-        if (!clusterConnectQueue.contains(cluster) && cluster.isActive() && totalShards != null) {
-            clusterConnectQueue.add(cluster);
-            if (clusterConnectQueueTaskThread == null || !clusterConnectQueueTaskThread.isAlive()) {
-                clusterConnectQueueTaskThread = new CustomThread(this::startClusterConnectTask, "cluster_connect", 1);
-                clusterConnectQueueTaskThread.start();
+    private void submitConnectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) {
+        if (cluster.isActive() && totalShards != null) {
+            connectorService.submit(() -> {
+                try {
+                    connectCluster(cluster, allowReconnect, sendBlockShards);
+                } catch (InterruptedException e) {
+                    //Ignore
+                }
+            });
+        }
+    }
+
+    private void connectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) throws InterruptedException {
+        if (allowReconnect && cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED) {
+            LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
+            cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
+            SendEvent.sendExit(cluster.getClusterId());
+        }
+
+        while(cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
+            Thread.sleep(100);
+
+            while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.OFFLINE) {
+                Thread.sleep(100);
+            }
+
+            LOGGER.info("Connecting cluster {}", cluster.getClusterId());
+
+            if (sendBlockShards) {
+                ClusterConnectionManager.getInstance().getActiveClusters().stream()
+                        .filter(c -> c.getClusterId() > cluster.getClusterId())
+                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardInterval()[0], cluster.getShardInterval()[1]).exceptionally(ExceptionLogger.get()));
+            }
+
+            cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
+            SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards)
+                    .exceptionally(ExceptionLogger.get());
+
+            while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.BOOTING_UP) {
+                Thread.sleep(100);
             }
         }
     }
@@ -169,64 +203,6 @@ public class ClusterConnectionManager {
 
     public int getResponsibleShard(long serverId) {
         return Math.abs((int) ((serverId >> 22) % totalShards));
-    }
-
-    private void startClusterConnectTask() {
-        Cluster cluster;
-        while ((cluster = clusterConnectQueue.peek()) != null) {
-            switch (cluster.getConnectionStatus()) {
-                case FULLY_CONNECTED:
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
-                    }
-                    LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
-                    cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
-                    SendEvent.sendExit(cluster.getClusterId());
-                    while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.OFFLINE) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            LOGGER.error("Interrupted", e);
-                        }
-                    }
-
-                case BOOTING_UP:
-                    LOGGER.info("Connecting cluster {}", cluster.getClusterId());
-
-                    if (sendBlockShards) {
-                        Cluster finalCluster = cluster;
-                        ClusterConnectionManager.getInstance().getActiveClusters().stream()
-                                .filter(c -> c.getClusterId() > finalCluster.getClusterId())
-                                .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, finalCluster.getShardInterval()[0], finalCluster.getShardInterval()[1]).exceptionally(ExceptionLogger.get()));
-                    }
-
-                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards)
-                            .exceptionally(ExceptionLogger.get());
-                    while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.BOOTING_UP) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            LOGGER.error("Interrupted", e);
-                        }
-                    }
-                    break;
-
-                case OFFLINE:
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
-                    }
-                    break;
-
-                default:
-                    throw new NoSuchElementException("Invalid connection status");
-            }
-            clusterConnectQueue.poll();
-        }
-        sendBlockShards = false;
     }
 
 }

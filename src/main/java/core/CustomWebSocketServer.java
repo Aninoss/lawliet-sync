@@ -173,12 +173,7 @@ public class CustomWebSocketServer extends WebSocketServer {
         JSONObject contentJson = new JSONObject(message.substring(event.length() + 2));
         
         int requestId = contentJson.getInt("request_id");
-        boolean isResponse = outCache.containsKey(requestId); //TODO remove later
-        if (contentJson.has("is_response")) {
-            isResponse = contentJson.getBoolean("is_response");
-        }
-
-        if (isResponse) {
+        if (contentJson.getBoolean("is_response")) {
             outCache.remove(requestId)
                     .complete(contentJson);
         } else {
