@@ -1,6 +1,7 @@
 package syncserver;
 
 import core.CustomThread;
+import core.InRelationSplitter;
 import core.cache.DiscordRecommendedTotalShardsCache;
 import org.javacord.api.util.logging.ExceptionLogger;
 import org.slf4j.Logger;
@@ -73,16 +74,16 @@ public class ClusterConnectionManager {
         List<Cluster> clusters = getClusters();
 
         int shift = 0;
-        int totalSize = getTotalSize();
+
+        InRelationSplitter irs = new InRelationSplitter(totalShards);
+        clusterMap.values()
+                .forEach(c -> irs.insert(c.getSize()));
+        int[] shards = irs.process();
+
         for (int i = 0; i < clusters.size(); i++) {
             Cluster cluster = clusters.get(i);
 
-            int area;
-            if (i < clusters.size() - 1)
-                area = (int) Math.round(((double) cluster.getSize() / totalSize) * totalShards);
-            else
-                area = totalShards - shift;
-
+            int area = shards[i];
             int shardMin = shift;
             int shardMax = shift + area - 1;
             cluster.setShardInterval(new int[]{ shardMin, shardMax });
@@ -143,14 +144,6 @@ public class ClusterConnectionManager {
                 Thread.sleep(100);
             }
         }
-    }
-
-    public int getTotalSize() {
-        return clusterMap
-                .values()
-                .stream()
-                .mapToInt(Cluster::getSize)
-                .sum();
     }
 
     public Optional<Long> getGlobalServerSize() {
