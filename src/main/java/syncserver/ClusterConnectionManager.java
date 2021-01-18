@@ -146,6 +146,10 @@ public class ClusterConnectionManager {
         }
     }
 
+    public Optional<Integer> getTotalShards() {
+        return Optional.ofNullable(totalShards);
+    }
+
     public Optional<Long> getGlobalServerSize() {
         long globalServerSize = 0;
         for(Cluster cluster : ClusterConnectionManager.getInstance().getClusters()) {

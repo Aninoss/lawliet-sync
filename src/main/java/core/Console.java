@@ -45,6 +45,7 @@ public class Console {
         tasks.put("start", this::onStart);
         tasks.put("restart", this::onRestart);
         tasks.put("clusters", this::onClusters);
+        tasks.put("shards", this::onShards);
         tasks.put("server", this::onServer);
         tasks.put("ratelimit", this::onRatelimit);
     }
@@ -66,6 +67,10 @@ public class Console {
         ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
             LOGGER.info("Cluster {}: {} ({} servers)", cluster.getClusterId(), cluster.getConnectionStatus().toString(), cluster.getLocalServerSize().orElse(0L));
         });
+    }
+
+    private void onShards(String[] args) {
+        LOGGER.info("Total shards: {}",  ClusterConnectionManager.getInstance().getTotalShards().orElse(0));
     }
 
     private void onRestart(String[] args) {
