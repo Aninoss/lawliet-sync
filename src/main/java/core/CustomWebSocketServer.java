@@ -174,8 +174,9 @@ public class CustomWebSocketServer extends WebSocketServer {
         
         int requestId = contentJson.getInt("request_id");
         if (contentJson.getBoolean("is_response")) {
-            outCache.remove(requestId)
-                    .complete(contentJson);
+            CompletableFuture<JSONObject> future = outCache.remove(requestId);
+            if (future != null)
+                future.complete(contentJson);
         } else {
             BiFunction<String, JSONObject, JSONObject> eventFunction = eventHandlers.get(event);
             if (eventFunction != null) {
