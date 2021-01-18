@@ -4,6 +4,7 @@ import core.schedule.MainScheduler;
 import core.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 
 import java.io.BufferedReader;
@@ -48,6 +49,20 @@ public class Console {
         tasks.put("shards", this::onShards);
         tasks.put("server", this::onServer);
         tasks.put("ratelimit", this::onRatelimit);
+        tasks.put("connect", this::onConnect);
+    }
+
+    private void onConnect(String[] args) {
+        int clusterId = Integer.parseInt(args[1]);
+        Cluster cluster = ClusterConnectionManager.getInstance().getCluster(clusterId);
+
+        if (args.length >= 4) {
+            int shardMin = Integer.parseInt(args[2]);
+            int shardMax = Integer.parseInt(args[3]);
+            cluster.setShardInterval(new int[] { shardMin, shardMax });
+        }
+
+        ClusterConnectionManager.getInstance().submitConnectCluster(cluster, true, false);
     }
 
     private void onRatelimit(String[] args) {
@@ -65,7 +80,13 @@ public class Console {
 
     private void onClusters(String[] args) {
         ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
-            LOGGER.info("Cluster {}: {} ({} servers)", cluster.getClusterId(), cluster.getConnectionStatus().toString(), cluster.getLocalServerSize().orElse(0L));
+            LOGGER.info("Cluster {}: {} ({} servers, shard {} - {})",
+                    cluster.getClusterId(),
+                    cluster.getConnectionStatus().toString(),
+                    cluster.getLocalServerSize().orElse(0L),
+                    cluster.getShardInterval() != null ? cluster.getShardInterval()[0] : -1,
+                    cluster.getShardInterval() != null ? cluster.getShardInterval()[1] : -1
+            );
         });
     }
 

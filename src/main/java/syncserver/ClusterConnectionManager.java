@@ -102,7 +102,7 @@ public class ClusterConnectionManager {
         }
     }
 
-    private void submitConnectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) {
+    public void submitConnectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) {
         if (cluster.isActive() && totalShards != null) {
             connectorService.submit(() -> {
                 try {
