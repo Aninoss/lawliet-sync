@@ -1,4 +1,4 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/aninoss/lawlietsync/badge)](https://www.codefactor.io/repository/github/aninoss/lawlietsync)
+[![CodeFactor](https://www.codefactor.io/repository/github/aninoss/lawliet-sync/badge)](https://www.codefactor.io/repository/github/aninoss/lawliet-sync)
 # Lawliet Sync
 The source code of the Lawliet cluster synchronization program  
 https://top.gg/bot/368521195940741122
