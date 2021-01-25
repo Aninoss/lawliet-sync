@@ -1,12 +1,10 @@
 package core;
 
-import core.schedule.MainScheduler;
 import core.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
