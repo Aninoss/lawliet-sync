@@ -1,8 +1,6 @@
 package mysql;
 
 import com.mysql.cj.jdbc.MysqlDataSource;
-import core.Program;
-import core.SecretManager;
 import mysql.interfaces.SQLConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +33,14 @@ public class DBMain implements DriverAction {
         if (connect == null) {
             LOGGER.info("Connecting with database");
             final MysqlDataSource rv = new MysqlDataSource();
-            rv.setServerName("localhost");
+            rv.setServerName(System.getenv("DB_HOST"));
             rv.setPortNumber(3306);
-            rv.setDatabaseName(SecretManager.getString("database.database"));
+            rv.setDatabaseName(System.getenv("DB_DATABASE"));
             rv.setAllowMultiQueries(false);
             rv.setAutoReconnect(true);
             rv.setCharacterEncoding("UTF-8");
-            rv.setUser(Program.isProductionMode() ? SecretManager.getString("database.username") : "root");
-            if (Program.isProductionMode()) rv.setPassword(SecretManager.getString("database.password"));
+            rv.setUser(System.getenv("DB_USER"));
+            rv.setPassword(System.getenv("DB_PASSWORD"));
             rv.setServerTimezone(TimeZone.getDefault().getID());
             rv.setRewriteBatchedStatements(true);
             connect = rv.getConnection();

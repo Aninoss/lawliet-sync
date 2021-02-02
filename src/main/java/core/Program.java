@@ -2,17 +2,14 @@ package core;
 
 public class Program {
 
-    private static boolean production = false;
-
-    public static void init(boolean newProduction) {
-        production = newProduction;
+    public static void init() {
         System.out.println("-------------------------------------");
-        System.out.println("Production Mode: " + production);
+        System.out.println("Production Mode: " + isProductionMode());
         System.out.println("-------------------------------------");
     }
 
     public static boolean isProductionMode() {
-        return production;
+        return System.getenv("PRODUCTION").equals("true");
     }
 
 }

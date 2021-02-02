@@ -54,7 +54,7 @@ public class CustomWebSocketServer extends WebSocketServer {
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
         String socketId = clientHandshake.getFieldValue("socket_id");
         String auth = clientHandshake.getFieldValue("auth");
-        if (SecretManager.getString("syncserver.auth").equals(auth)) {
+        if (System.getenv("SYNC_AUTH").equals(auth)) {
             LOGGER.info(socketId + " connected");
             socketBiMap.put(socketId, webSocket);
             connectedHandlers.removeIf(connectedHandlerFunction -> connectedHandlerFunction.apply(socketId, clientHandshake));

@@ -1,7 +1,6 @@
 package core.cache;
 
 import core.Program;
-import core.SecretManager;
 import core.internet.HttpProperty;
 import core.internet.HttpRequest;
 import mysql.modules.patreon.DBPatreon;
@@ -11,8 +10,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.ClusterConnectionManager;
-import syncserver.SendEvent;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -81,7 +78,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
     }
 
     private void fetchFromUrl(String url, HashMap<Long, Integer> userTiers) throws ExecutionException, InterruptedException {
-        HttpProperty property = new HttpProperty("Authorization", "Bearer " + SecretManager.getString("patreon.accesstoken"));
+        HttpProperty property = new HttpProperty("Authorization", "Bearer " + System.getenv("PATREON_ACCESS"));
         String data = HttpRequest.getData(url, property).get().getContent().get();
         JSONObject rootJson = new JSONObject(data);
 

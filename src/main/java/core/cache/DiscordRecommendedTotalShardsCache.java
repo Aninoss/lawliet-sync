@@ -1,7 +1,6 @@
 package core.cache;
 
 import core.Program;
-import core.SecretManager;
 import org.javacord.api.DiscordApiBuilder;
 
 public class DiscordRecommendedTotalShardsCache extends SingleCache<Integer> {
@@ -30,7 +29,7 @@ public class DiscordRecommendedTotalShardsCache extends SingleCache<Integer> {
             return 1;
 
         return new DiscordApiBuilder()
-                .setToken(SecretManager.getString("bot.token"))
+                .setToken(System.getenv("BOT_TOKEN"))
                 .setRecommendedTotalShards()
                 .join()
                 .getTotalShards();
