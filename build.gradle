@@ -16,18 +16,28 @@ repositories {
 
 dependencies {
     implementation 'org.javacord:javacord:3.1.2'
-    implementation 'org.json:json:20180813'
-    implementation 'org.jsoup:jsoup:1.12.1'
-    implementation 'org.java-websocket:Java-WebSocket:1.5.1'
-    implementation 'com.google.guava:guava:28.1-jre'
-    implementation 'org.reflections:reflections:0.9.11'
-    implementation 'mysql:mysql-connector-java:8.0.17'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
-    implementation 'org.apache.logging.log4j:log4j-to-slf4j:2.13.1'
+    compile 'org.json:json:20180813'
+    compile 'org.jsoup:jsoup:1.12.1'
+    compile 'org.java-websocket:Java-WebSocket:1.5.1'
+    compile 'com.google.guava:guava:28.1-jre'
+    compile 'org.reflections:reflections:0.9.11'
+    compile 'mysql:mysql-connector-java:8.0.17'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+    compile 'org.apache.logging.log4j:log4j-to-slf4j:2.13.1'
 }
 
 javafx {
     modules = [ 'javafx.controls' ]
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": "Main"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 docker {

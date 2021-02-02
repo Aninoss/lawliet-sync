@@ -1,12 +1,10 @@
 package syncserver;
 
 import core.CustomWebSocketServer;
-import core.schedule.MainScheduler;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
-import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.Set;
 
