@@ -1,17 +1,13 @@
 package syncserver;
 
-import core.CustomThread;
+import core.ExceptionLogger;
 import core.InRelationSplitter;
 import core.cache.DiscordRecommendedTotalShardsCache;
-import org.javacord.api.util.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ClusterConnectionManager {
