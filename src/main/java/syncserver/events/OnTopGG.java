@@ -14,7 +14,7 @@ public class OnTopGG implements SyncServerFunction {
     @Override
     public JSONObject apply(String socketId, JSONObject jsonObject) {
         if (socketId.equals(ClientTypes.WEB)) {
-            LOGGER.info("UPVOTE | {} START", jsonObject.getLong("user"));
+            LOGGER.info("UPVOTE | {}", jsonObject.getLong("user"));
             ClusterConnectionManager.getInstance().getActiveClusters()
                     .forEach(c -> {
                         SendEvent.sendJSONSecure("TOPGG", c.getClusterId(), jsonObject)

@@ -34,7 +34,7 @@ public class DBMain implements DriverAction {
             LOGGER.info("Connecting with database");
             final MysqlDataSource rv = new MysqlDataSource();
             rv.setServerName(System.getenv("DB_HOST"));
-            rv.setPortNumber(3306);
+            rv.setPortNumber(Integer.parseInt(System.getenv("DB_PORT")));
             rv.setDatabaseName(System.getenv("DB_DATABASE"));
             rv.setAllowMultiQueries(false);
             rv.setAutoReconnect(true);
