@@ -1,5 +1,5 @@
-import core.Console;
-import core.Program;
+package core;
+
 import core.cache.PatreonCache;
 import mysql.DBMain;
 import syncserver.SyncManager;

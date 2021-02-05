@@ -1,44 +1,37 @@
 plugins {
     id 'java'
     id 'org.openjfx.javafxplugin' version '0.0.9'
-    id 'com.palantir.docker' version '0.22.1'
+    id 'com.google.cloud.tools.jib' version '2.7.1'
 }
 
 group = 'xyz.lawlietbot'
 version = 'latest'
 
 repositories {
-    mavenLocal()
-    maven {
-        url = uri('https://repo.maven.apache.org/maven2/')
-    }
+    mavenCentral()
 }
 
 dependencies {
     implementation 'org.javacord:javacord:3.1.2'
-    compile 'net.java.openjfx.backport:openjfx-78-backport:1.8.0-ea-b96.1'
-    compile 'org.json:json:20180813'
-    compile 'org.jsoup:jsoup:1.12.1'
-    compile 'org.java-websocket:Java-WebSocket:1.5.1'
-    compile 'com.google.guava:guava:28.1-jre'
-    compile 'org.reflections:reflections:0.9.11'
-    compile 'mysql:mysql-connector-java:8.0.17'
-    compile 'ch.qos.logback:logback-classic:1.2.3'
-    compile 'org.apache.logging.log4j:log4j-to-slf4j:2.13.1'
+    implementation 'net.java.openjfx.backport:openjfx-78-backport:1.8.0-ea-b96.1'
+    implementation 'org.json:json:20180813'
+    implementation 'org.jsoup:jsoup:1.12.1'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.1'
+    implementation 'com.google.guava:guava:28.1-jre'
+    implementation 'org.reflections:reflections:0.9.11'
+    implementation 'mysql:mysql-connector-java:8.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'org.apache.logging.log4j:log4j-to-slf4j:2.13.1'
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
 }
 
 jar {
     manifest {
-        attributes "Main-Class": "Main"
+        attributes "Main-Class": "core.Main"
     }
-
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
-docker {
-    name 'registry.lawlietbot.xyz/lawliet-sync:latest'
-    files 'build/libs'
-    tag 'DockerHub', "registry.lawlietbot.xyz/lawliet-sync:latest"
 }
