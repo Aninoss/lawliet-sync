@@ -64,6 +64,12 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "BLOCK_SHARDS", dataJson);
     }
 
+    public static CompletableFuture<JSONObject> sendCmd(long clusterId, String input) {
+        JSONObject dataJson = new JSONObject();
+        dataJson.put("input", input);
+        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "CMD", dataJson);
+    }
+
     public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
     }

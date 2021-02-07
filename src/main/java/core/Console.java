@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
+import syncserver.SendEvent;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -48,6 +50,23 @@ public class Console {
         tasks.put("server", this::onServer);
         tasks.put("ratelimit", this::onRatelimit);
         tasks.put("connect", this::onConnect);
+        tasks.put("cmd", this::onCmd);
+    }
+
+    private void onCmd(String[] args) {
+        int clusterId = Integer.parseInt(args[1]);
+        StringBuilder inputBuilder = new StringBuilder();
+        for(int i = 2; i < args.length; i++) {
+            if (i > 2)
+                inputBuilder.append(" ");
+            inputBuilder.append(args[i]);
+        }
+
+        if (clusterId >= 1)
+            SendEvent.sendCmd(clusterId, inputBuilder.toString());
+        else
+            ClusterConnectionManager.getInstance().getActiveClusters()
+                    .forEach(c -> SendEvent.sendCmd(c.getClusterId(), inputBuilder.toString()));
     }
 
     private void onConnect(String[] args) {
