@@ -129,7 +129,8 @@ public class ClusterConnectionManager {
             if (sendBlockShards) {
                 ClusterConnectionManager.getInstance().getActiveClusters().stream()
                         .filter(c -> c.getClusterId() > cluster.getClusterId())
-                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardInterval()[0], cluster.getShardInterval()[1]).exceptionally(ExceptionLogger.get()));
+                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardInterval()[0], cluster.getShardInterval()[1])
+                                .exceptionally(ExceptionLogger.get()));
             }
 
             cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);

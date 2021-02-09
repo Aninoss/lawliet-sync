@@ -1,10 +1,11 @@
-package core;
+package syncserver;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import core.CustomThread;
+import core.GlobalThreadPool;
 import core.schedule.MainScheduler;
 import core.util.ExceptionUtil;
-import org.checkerframework.checker.units.qual.C;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -14,17 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class CustomWebSocketServer extends WebSocketServer {
@@ -149,13 +146,14 @@ public class CustomWebSocketServer extends WebSocketServer {
 
         content.put("request_id", id);
         content.put("is_response", false);
+        outCache.put(id, future);
         try {
             webSocket.send(event + "::" + content.toString());
         } catch (Throwable e) {
             future.completeExceptionally(e);
+            outCache.remove(id);
             return future;
         }
-        outCache.put(id, future);
 
         MainScheduler.getInstance().schedule(5, ChronoUnit.SECONDS, "websocket_" + event, () -> {
             if (outCache.containsKey(id)) {

@@ -4,5 +4,6 @@ public interface ClientTypes {
 
     String CLUSTER = "cluster";
     String WEB = "web";
+    String CONSOLE = "console";
 
 }
