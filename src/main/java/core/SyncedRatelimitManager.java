@@ -11,7 +11,7 @@ public class SyncedRatelimitManager {
     private SyncedRatelimitManager() {
     }
 
-    private long intervalTimeNanos = 21_000_000L;
+    private long intervalTimeNanos = 21_500_000L;
     private long nextRequest = 0;
 
     public synchronized long processWaitingTimeNanos() {
