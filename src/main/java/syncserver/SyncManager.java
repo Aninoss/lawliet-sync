@@ -1,5 +1,7 @@
 package syncserver;
 
+import org.java_websocket.server.WebSocketJsonServer;
+import org.java_websocket.server.WebSocketServer;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +19,11 @@ public class SyncManager {
         return ourInstance;
     }
 
-    private final CustomWebSocketServer server;
+    private final WebSocketJsonServer server;
     private boolean started = false;
 
     private SyncManager() {
-        server = new CustomWebSocketServer(new InetSocketAddress(9998));
+        server = new WebSocketJsonServer(new InetSocketAddress(9998), System.getenv("SYNC_AUTH"));
         server.addConnectedHandler(new OnConnected());
         server.addDisconnectedHandler(new OnDisconnected());
 
@@ -51,7 +53,7 @@ public class SyncManager {
         LOGGER.info("Waiting for clusters");
     }
 
-    public CustomWebSocketServer getServer() {
+    public WebSocketJsonServer getServer() {
         return server;
     }
 
