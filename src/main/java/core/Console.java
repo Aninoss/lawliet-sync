@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Scanner;
 
 public class Console {
 
@@ -165,11 +166,12 @@ public class Console {
     }
 
     private void manageConsole() {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        Scanner scanner = new Scanner(System.in);
         while (true) {
-            try {
-                if (br.ready()) {
-                    String[] args = br.readLine().split(" ");
+            if (scanner.hasNext()) {
+                String line = scanner.nextLine();
+                if (line.length() > 0) {
+                    String[] args = line.split(" ");
                     ConsoleTask task = tasks.get(args[0]);
                     if (task != null) {
                         GlobalThreadPool.getExecutorService().submit(() -> {
@@ -183,9 +185,6 @@ public class Console {
                         System.err.printf("No result for \"%s\"\n", args[0]);
                     }
                 }
-                Thread.sleep(100);
-            } catch (IOException | InterruptedException e) {
-                LOGGER.error("Unexpected console exception", e);
             }
         }
     }

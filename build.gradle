@@ -24,7 +24,7 @@ dependencies {
     implementation 'net.java.openjfx.backport:openjfx-78-backport:1.8.0-ea-b96.1'
     implementation 'org.json:json:20180813'
     implementation 'org.jsoup:jsoup:1.12.1'
-    implementation 'com.github.Aninoss:Java-WebSocket:sending-json-events-SNAPSHOT'
+    implementation 'com.github.Aninoss:Java-WebSocket:94609ebb95'
     implementation 'com.google.guava:guava:28.1-jre'
     implementation 'org.reflections:reflections:0.9.11'
     implementation 'mysql:mysql-connector-java:8.0.17'
