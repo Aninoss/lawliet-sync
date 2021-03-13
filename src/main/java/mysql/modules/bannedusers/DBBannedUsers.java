@@ -1,10 +1,9 @@
 package mysql.modules.bannedusers;
 
+import java.util.ArrayList;
 import mysql.DBDataLoad;
 import mysql.DBMain;
 import mysql.DBSingleBeanGenerator;
-
-import java.util.ArrayList;
 
 public class DBBannedUsers extends DBSingleBeanGenerator<BannedUsersBean> {
 

@@ -1,10 +1,7 @@
 package syncserver;
 
-import org.java_websocket.handshake.ClientHandshake;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.function.BiFunction;
+import org.java_websocket.handshake.ClientHandshake;
 
 public class OnConnected implements BiFunction<String, ClientHandshake, Boolean> {
 

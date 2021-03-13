@@ -1,10 +1,8 @@
 package syncserver.events;
 
-import org.javacord.api.entity.webhook.WebhookBuilder;
+import java.util.Optional;
 import org.json.JSONObject;
 import syncserver.*;
-
-import java.util.Optional;
 
 @SyncServerEvent(event = "COMMAND_LIST")
 public class OnCommandList implements SyncServerFunction {

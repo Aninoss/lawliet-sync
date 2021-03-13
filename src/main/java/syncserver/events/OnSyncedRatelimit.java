@@ -1,7 +1,6 @@
 package syncserver.events;
 
 import core.ExceptionLogger;
-import core.SyncedRatelimitManager;
 import org.json.JSONObject;
 import syncserver.*;
 

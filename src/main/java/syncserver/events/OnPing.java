@@ -1,7 +1,9 @@
 package syncserver.events;
 
 import org.json.JSONObject;
-import syncserver.*;
+import syncserver.SendEvent;
+import syncserver.SyncServerEvent;
+import syncserver.SyncServerFunction;
 
 @SyncServerEvent(event = "PING")
 public class OnPing implements SyncServerFunction {

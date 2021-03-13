@@ -1,11 +1,10 @@
 package syncserver;
 
-import org.json.JSONObject;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import org.json.JSONObject;
 
 public class SendEvent {
 

@@ -1,9 +1,8 @@
 package core.schedule;
 
+import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.TimerTask;
 
 public class ScheduleAdapter extends TimerTask {
 

@@ -1,9 +1,8 @@
 package mysql.modules.patreon;
 
+import java.util.HashMap;
 import mysql.DBDataLoad;
 import mysql.DBSingleBeanGenerator;
-
-import java.util.HashMap;
 
 public class DBPatreon extends DBSingleBeanGenerator<HashMap<Long, PatreonBean>> {
 

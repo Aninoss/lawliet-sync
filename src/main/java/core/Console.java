@@ -1,17 +1,13 @@
 package core;
 
+import java.util.HashMap;
+import java.util.Scanner;
 import core.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 import syncserver.SendEvent;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Scanner;
 
 public class Console {
 

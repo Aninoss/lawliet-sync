@@ -1,10 +1,9 @@
 package core;
 
-import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.collections.ListChangeListener;
-
 import java.util.*;
 import java.util.function.Function;
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.collections.ListChangeListener;
 
 public class CustomObservableList<T> extends ObservableListWrapper<T> implements Observer {
 

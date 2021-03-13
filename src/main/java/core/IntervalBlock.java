@@ -1,10 +1,8 @@
 package core;
 
-import core.util.TimeUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import core.util.TimeUtil;
 
 public class IntervalBlock {
 

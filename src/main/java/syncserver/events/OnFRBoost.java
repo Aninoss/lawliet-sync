@@ -3,7 +3,6 @@ package syncserver.events;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import org.json.JSONObject;
 import syncserver.ClientTypes;
-import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 

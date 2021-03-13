@@ -1,10 +1,6 @@
 package syncserver.events;
 
-import core.cache.PatreonCache;
-import mysql.modules.bannedusers.DBBannedUsers;
 import mysql.modules.featurerequests.DBFeatureRequests;
-import mysql.modules.featurerequests.FRPanelType;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.ClientTypes;
 import syncserver.SyncServerEvent;

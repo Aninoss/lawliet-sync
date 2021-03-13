@@ -1,9 +1,8 @@
 package syncserver.events;
 
+import java.util.Optional;
 import org.json.JSONObject;
 import syncserver.*;
-
-import java.util.Optional;
 
 @SyncServerEvent(event = "FAQ_LIST")
 public class OnFAQList implements SyncServerFunction {

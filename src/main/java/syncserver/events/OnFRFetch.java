@@ -7,7 +7,6 @@ import mysql.modules.featurerequests.FRPanelType;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.ClientTypes;
-import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 

@@ -1,14 +1,14 @@
 package syncserver;
 
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import core.ExceptionLogger;
 import core.InRelationSplitter;
 import core.cache.DiscordRecommendedTotalShardsCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 public class ClusterConnectionManager {
 
@@ -40,8 +40,9 @@ public class ClusterConnectionManager {
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, size));
         cluster.setShardInterval(new int[] { shardMin, shardMax });
         cluster.setConnectionStatus(Cluster.ConnectionStatus.FULLY_CONNECTED);
-        if (this.totalShards == null)
+        if (this.totalShards == null) {
             this.totalShards = totalShards;
+        }
     }
 
     public void unregister(int clusterId) {
@@ -82,7 +83,7 @@ public class ClusterConnectionManager {
             int area = shards[i];
             int shardMin = shift;
             int shardMax = shift + area - 1;
-            cluster.setShardInterval(new int[]{ shardMin, shardMax });
+            cluster.setShardInterval(new int[] { shardMin, shardMax });
             LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1]);
             submitConnectCluster(cluster, true, true);
             shift += area;
@@ -117,7 +118,7 @@ public class ClusterConnectionManager {
             SendEvent.sendExit(cluster.getClusterId());
         }
 
-        while(cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
+        while (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             Thread.sleep(100);
 
             while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.OFFLINE) {
@@ -148,7 +149,7 @@ public class ClusterConnectionManager {
 
     public Optional<Long> getGlobalServerSize() {
         long globalServerSize = 0;
-        for(Cluster cluster : ClusterConnectionManager.getInstance().getClusters()) {
+        for (Cluster cluster : ClusterConnectionManager.getInstance().getClusters()) {
             if (cluster.isActive() || cluster.getLocalServerSize().isPresent()) {
                 if (cluster.getLocalServerSize().isEmpty()) {
                     globalServerSize = 0;
@@ -187,8 +188,9 @@ public class ClusterConnectionManager {
         int shard = getResponsibleShard(serverId);
         for (Cluster cluster : getActiveClusters()) {
             int[] shardInterval = cluster.getShardInterval();
-            if (shard >= shardInterval[0] && shard <= shardInterval[1])
+            if (shard >= shardInterval[0] && shard <= shardInterval[1]) {
                 return cluster;
+            }
         }
 
         throw new RuntimeException("Unknown error");

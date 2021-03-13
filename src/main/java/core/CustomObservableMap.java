@@ -1,12 +1,11 @@
 package core;
 
+import java.util.*;
+import java.util.function.Function;
 import com.sun.javafx.collections.ObservableMapWrapper;
 import javafx.collections.MapChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.function.Function;
 
 public class CustomObservableMap<T, U> extends ObservableMapWrapper<T, U> implements Observer {
 

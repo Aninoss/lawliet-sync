@@ -1,13 +1,12 @@
 package syncserver;
 
-import org.java_websocket.server.WebSocketJsonServer;
-import org.java_websocket.server.WebSocketServer;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.Objects;
 import java.util.Set;
+import org.java_websocket.server.WebSocketJsonServer;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SyncManager {
 

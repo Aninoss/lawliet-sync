@@ -1,12 +1,9 @@
 package syncserver.events;
 
+import java.util.concurrent.CompletableFuture;
 import core.cache.PatreonCache;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.*;
-
-import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 
 @SyncServerEvent(event = "PATREON_FETCH")
 public class OnPatreonFetch implements SyncServerFunction {

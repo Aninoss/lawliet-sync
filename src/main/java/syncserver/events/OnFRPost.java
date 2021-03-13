@@ -1,7 +1,6 @@
 package syncserver.events;
 
 import mysql.modules.featurerequests.DBFeatureRequests;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.json.JSONObject;
 import syncserver.*;
 
