@@ -70,6 +70,15 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "CMD", dataJson);
     }
 
+    public static CompletableFuture<Void> sendRequestSyncedRatelimit(long clusterId, long ratelimit) {
+        return process(
+                clusterId,
+                "SYNCED_RATELIMIT",
+                Map.of("ratelimit", ratelimit),
+                responseJson -> null
+        );
+    }
+
     public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
     }
