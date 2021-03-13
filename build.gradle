@@ -20,7 +20,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.javacord:javacord:3.1.2'
     implementation 'net.java.openjfx.backport:openjfx-78-backport:1.8.0-ea-b96.1'
     implementation 'org.json:json:20180813'
     implementation 'org.jsoup:jsoup:1.12.1'

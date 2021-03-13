@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import core.ExceptionLogger;
 import core.InRelationSplitter;
-import core.cache.DiscordRecommendedTotalShardsCache;
+import core.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,13 +62,13 @@ public class ClusterConnectionManager {
     }
 
     public void start() {
-        int totalShards = DiscordRecommendedTotalShardsCache.getInstance().getAsync();
+        List<Cluster> clusters = getClusters();
+        int totalShards = Program.isProductionMode() ? clusters.size() * 16 : 1;
         if (this.totalShards != null && this.totalShards != totalShards) {
             LOGGER.info("Shard size has changed");
         }
         this.totalShards = totalShards;
         LOGGER.info("Starting clusters with total shard size of {}", totalShards);
-        List<Cluster> clusters = getClusters();
 
         int shift = 0;
 
