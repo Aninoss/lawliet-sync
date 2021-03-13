@@ -73,7 +73,9 @@ public class HttpRequest {
                 try (OutputStream os = connection.getOutputStream()) {
                     os.write(out);
                 }
-            } else connection.connect();
+            } else {
+                connection.connect();
+            }
 
             int code = connection.getResponseCode();
             if (code / 100 != 2) {

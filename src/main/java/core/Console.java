@@ -53,17 +53,19 @@ public class Console {
     private void onCmd(String[] args) {
         int clusterId = Integer.parseInt(args[1]);
         StringBuilder inputBuilder = new StringBuilder();
-        for(int i = 2; i < args.length; i++) {
-            if (i > 2)
+        for (int i = 2; i < args.length; i++) {
+            if (i > 2) {
                 inputBuilder.append(" ");
+            }
             inputBuilder.append(args[i]);
         }
 
-        if (clusterId >= 1)
+        if (clusterId >= 1) {
             SendEvent.sendCmd(clusterId, inputBuilder.toString());
-        else
+        } else {
             ClusterConnectionManager.getInstance().getActiveClusters()
                     .forEach(c -> SendEvent.sendCmd(c.getClusterId(), inputBuilder.toString()));
+        }
     }
 
     private void onConnect(String[] args) {
@@ -94,7 +96,8 @@ public class Console {
 
     private void onClusters(String[] args) {
         ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
-            LOGGER.info("Cluster {}: {} ({} servers, shard {} - {})",
+            LOGGER.info(
+                    "Cluster {}: {} ({} servers, shard {} - {})",
                     cluster.getClusterId(),
                     cluster.getConnectionStatus().toString(),
                     cluster.getLocalServerSize().orElse(0L),
@@ -105,7 +108,7 @@ public class Console {
     }
 
     private void onShards(String[] args) {
-        LOGGER.info("Total shards: {}",  ClusterConnectionManager.getInstance().getTotalShards().orElse(0));
+        LOGGER.info("Total shards: {}", ClusterConnectionManager.getInstance().getTotalShards().orElse(0));
     }
 
     private void onRestart(String[] args) {

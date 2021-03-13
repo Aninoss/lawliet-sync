@@ -49,19 +49,21 @@ public abstract class DBBeanGenerator<T, U extends Observable> extends DBCached 
         }
 
         if (this instanceof IntervalSave) {
-            int minutes = ((IntervalSave)this).getIntervalMinutes();
+            int minutes = ((IntervalSave) this).getIntervalMinutes();
             changed = new ArrayList<>();
 
             Runtime.getRuntime().addShutdownHook(new CustomThread(() -> {
-                if (changed.size() > 0)
+                if (changed.size() > 0) {
                     intervalSave();
+                }
             }, "shutdown_intervalsave"));
 
             Thread t = new CustomThread(() -> {
                 IntervalBlock intervalBlock = new IntervalBlock(Program.isProductionMode() ? minutes : 1, ChronoUnit.MINUTES);
-                while(intervalBlock.block()) {
-                    if (changed.size() > 0)
+                while (intervalBlock.block()) {
+                    if (changed.size() > 0) {
                         intervalSave();
+                    }
                 }
             }, "dbbean_interval_save", 1);
             t.start();
@@ -72,12 +74,12 @@ public abstract class DBBeanGenerator<T, U extends Observable> extends DBCached 
         ArrayList<U> tempList = new ArrayList<>(changed);
         changed = new ArrayList<>();
         tempList.forEach(value -> {
-                    try {
-                        saveBean(value);
-                    } catch (Throwable e) {
-                        LOGGER.error("Could not save bean", e);
-                    }
-                });
+            try {
+                saveBean(value);
+            } catch (Throwable e) {
+                LOGGER.error("Could not save bean", e);
+            }
+        });
     }
 
     protected abstract U loadBean(T t) throws Exception;
@@ -147,8 +149,9 @@ public abstract class DBBeanGenerator<T, U extends Observable> extends DBCached 
 
     @Override
     public void clear() {
-        if (!(this instanceof IntervalSave))
+        if (!(this instanceof IntervalSave)) {
             cache.invalidateAll();
+        }
     }
 
 }

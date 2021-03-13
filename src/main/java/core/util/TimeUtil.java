@@ -5,7 +5,8 @@ import java.time.Instant;
 
 public final class TimeUtil {
 
-    private TimeUtil() {}
+    private TimeUtil() {
+    }
 
     public static long getMilisBetweenInstants(Instant instantBefore, Instant instantAfter) {
         Duration duration = Duration.between(instantBefore, instantAfter);

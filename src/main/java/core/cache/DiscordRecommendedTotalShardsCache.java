@@ -25,8 +25,9 @@ public class DiscordRecommendedTotalShardsCache extends SingleCache<Integer> {
     }
 
     private int fetchRecommendedTotalShards() {
-        if (!Program.isProductionMode())
+        if (!Program.isProductionMode()) {
             return 1;
+        }
 
         return new DiscordApiBuilder()
                 .setToken(System.getenv("BOT_TOKEN"))

@@ -2,7 +2,8 @@ package core.util;
 
 public class StringUtil {
 
-    private StringUtil() {}
+    private StringUtil() {
+    }
 
     public static boolean stringIsInt(String string) {
         try {

@@ -12,7 +12,7 @@ public class DBKeySetLoad<T> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(DBKeySetLoad.class);
 
-   private final Statement statement;
+    private final Statement statement;
 
     public DBKeySetLoad(String table, String keyColumn) {
         try {

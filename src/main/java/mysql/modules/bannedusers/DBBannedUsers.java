@@ -8,8 +8,13 @@ import mysql.DBSingleBeanGenerator;
 public class DBBannedUsers extends DBSingleBeanGenerator<BannedUsersBean> {
 
     private static final DBBannedUsers ourInstance = new DBBannedUsers();
-    public static DBBannedUsers getInstance() { return ourInstance; }
-    private DBBannedUsers() {}
+
+    public static DBBannedUsers getInstance() {
+        return ourInstance;
+    }
+
+    private DBBannedUsers() {
+    }
 
     @Override
     protected BannedUsersBean loadBean() {
@@ -23,7 +28,8 @@ public class DBBannedUsers extends DBSingleBeanGenerator<BannedUsersBean> {
 
     private ArrayList<Long> getUserIds() {
         return new DBDataLoad<Long>("BannedUsers", "userId", "1",
-                preparedStatement -> {}
+                preparedStatement -> {
+                }
         ).getArrayList(resultSet -> resultSet.getLong(1));
     }
 

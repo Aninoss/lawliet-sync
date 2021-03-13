@@ -35,8 +35,9 @@ public abstract class DBSingleBeanGenerator<T> extends DBCached {
 
     private void setExpirationTimer() {
         Integer expirationTimeMinutes = getExpirationTimeMinutes();
-        if (expirationTimeMinutes != null)
+        if (expirationTimeMinutes != null) {
             nextUpdate = Instant.now().plus(expirationTimeMinutes, ChronoUnit.MINUTES);
+        }
     }
 
     public boolean isCached() {

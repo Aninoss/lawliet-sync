@@ -14,8 +14,9 @@ public class OnRequestCustomEmoji implements SyncServerFunction {
         long emojiId = jsonObject.getLong("emoji_id");
         JSONObject responseJson = new JSONObject();
         ClusterConnectionManager.getInstance().getActiveClusters().forEach(cluster -> {
-            if (cluster.getClusterId() != clusterId)
+            if (cluster.getClusterId() != clusterId) {
                 cluster.fetchCustomEmojiTagById(emojiId).ifPresent(emojiTag -> responseJson.put("tag", emojiTag));
+            }
         });
         return responseJson;
     }

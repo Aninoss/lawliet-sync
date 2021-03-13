@@ -15,7 +15,8 @@ public class OnPatreonFetch implements SyncServerFunction {
                     .thenAccept(userTierMap -> {
                         JSONObject jsonObject = PatreonCache.jsonFromUserPatreonMap(userTierMap);
                         ClusterConnectionManager.getInstance().getActiveClusters()
-                                .forEach(c -> SendEvent.sendJSON("PATREON",
+                                .forEach(c -> SendEvent.sendJSON(
+                                        "PATREON",
                                         c.getClusterId(),
                                         jsonObject
                                 ));

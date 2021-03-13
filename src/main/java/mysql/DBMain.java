@@ -21,8 +21,13 @@ public class DBMain implements DriverAction {
     private final static Logger LOGGER = LoggerFactory.getLogger(DBMain.class);
 
     private static final DBMain ourInstance = new DBMain();
-    public static DBMain getInstance() { return ourInstance; }
-    private DBMain() {}
+
+    public static DBMain getInstance() {
+        return ourInstance;
+    }
+
+    private DBMain() {
+    }
 
     private Connection connect = null;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
@@ -48,14 +53,17 @@ public class DBMain implements DriverAction {
     }
 
     public void addDBCached(DBCached dbCached) {
-        if (!caches.contains(dbCached))
+        if (!caches.contains(dbCached)) {
             caches.add(dbCached);
+        }
     }
 
-    public void clearCache() { caches.forEach(DBCached::clear); }
+    public void clearCache() {
+        caches.forEach(DBCached::clear);
+    }
 
     public static String instantToDateTimeString(Instant instant) {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.ofInstant(instant,ZoneOffset.systemDefault()));
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.ofInstant(instant, ZoneOffset.systemDefault()));
     }
 
     public static String localDateToDateString(LocalDate localDate) {
@@ -74,7 +82,7 @@ public class DBMain implements DriverAction {
 
     public int update(String sql, SQLConsumer<PreparedStatement> preparedStatementConsumer) throws SQLException, InterruptedException {
         SQLException exception = null;
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             try {
                 PreparedStatement preparedStatement = preparedStatement(sql);
                 preparedStatementConsumer.accept(preparedStatement);

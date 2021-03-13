@@ -53,8 +53,9 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
     }
 
     public int getUserTier(long userId) {
-        if (userId == ClusterConnectionManager.OWNER_ID)
+        if (userId == ClusterConnectionManager.OWNER_ID) {
             return 6;
+        }
 
         return getAsync().getOrDefault(userId, 0);
     }
@@ -66,8 +67,9 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
 
         sqlMap.keySet().forEach(userId -> {
             PatreonBean p = sqlMap.get(userId);
-            if (p.isValid())
+            if (p.isValid()) {
                 userTiersMapCombined.put(userId, p.getTier());
+            }
         });
         return userTiersMapCombined;
     }

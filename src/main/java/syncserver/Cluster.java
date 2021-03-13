@@ -78,8 +78,9 @@ public class Cluster {
     }
 
     public Optional<String> fetchCustomEmojiTagById(long emojiId) {
-        if (connectionStatus != ConnectionStatus.FULLY_CONNECTED)
+        if (connectionStatus != ConnectionStatus.FULLY_CONNECTED) {
             return Optional.empty();
+        }
 
         try {
             return emojiCache.get(emojiId);
@@ -89,8 +90,9 @@ public class Cluster {
     }
 
     public Optional<String> fetchServerNameById(long serverId) {
-        if (connectionStatus != ConnectionStatus.FULLY_CONNECTED)
+        if (connectionStatus != ConnectionStatus.FULLY_CONNECTED) {
             return Optional.empty();
+        }
 
         try {
             return serverNameCache.get(serverId);

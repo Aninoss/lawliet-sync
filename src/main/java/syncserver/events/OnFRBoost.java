@@ -19,8 +19,9 @@ public class OnFRBoost implements SyncServerFunction {
             int boostsTotal = OnFRFetch.getBoostsTotal(userId);
             int boostsUsed = OnFRFetch.getBoostsUsed(userId);
             int boostRemaining = 0;
-            if (boostsUsed != -1)
+            if (boostsUsed != -1) {
                 boostRemaining = Math.max(0, boostsTotal - boostsUsed);
+            }
 
             boolean success = boostRemaining > 0;
             if (success) {

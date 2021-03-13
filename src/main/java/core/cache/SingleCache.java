@@ -6,10 +6,10 @@ import core.GlobalThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SingleCache <T> {
+public abstract class SingleCache<T> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(SingleCache.class);
-    
+
     private Instant nextReset = null;
     private T value = null;
 
@@ -22,8 +22,9 @@ public abstract class SingleCache <T> {
     }
 
     public synchronized T getAsync() {
-        if (value == null)
+        if (value == null) {
             return get();
+        }
 
         if (nextReset == null || Instant.now().isAfter(nextReset)) {
             resetUpdateTimer();
@@ -41,8 +42,9 @@ public abstract class SingleCache <T> {
         resetUpdateTimer();
         try {
             T newValue = fetchValue();
-            if (newValue != null)
+            if (newValue != null) {
                 this.value = newValue;
+            }
         } catch (Throwable e) {
             LOGGER.error("Uncaught exception", e);
         }

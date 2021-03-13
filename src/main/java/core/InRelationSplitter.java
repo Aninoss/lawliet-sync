@@ -25,11 +25,11 @@ public class InRelationSplitter {
         for (int i = 0; i < relationalElements.size(); i++) {
             int v = relationalElements.get(i) * outMax / sum;
             out[i] = v;
-            rest[i] = (relationalElements.get(i) * outMax / (double)sum) - v;
+            rest[i] = (relationalElements.get(i) * outMax / (double) sum) - v;
             remaining -= v;
         }
 
-        for(; remaining > 0; remaining--) {
+        for (; remaining > 0; remaining--) {
             int index = posBiggest(rest);
             out[index]++;
             rest[index] = 0;

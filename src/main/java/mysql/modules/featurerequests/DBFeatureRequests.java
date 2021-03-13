@@ -58,8 +58,9 @@ public class DBFeatureRequests {
             preparedStatement.execute();
             ResultSet resultSet = preparedStatement.getResultSet();
 
-            if (resultSet.next())
+            if (resultSet.next()) {
                 ret = resultSet.getInt(1);
+            }
 
             resultSet.close();
             preparedStatement.close();
@@ -97,8 +98,9 @@ public class DBFeatureRequests {
             preparedStatement.execute();
             ResultSet resultSet = preparedStatement.getResultSet();
 
-            if (resultSet.next())
+            if (resultSet.next()) {
                 canPost = resultSet.getInt(1) == 0;
+            }
 
             resultSet.close();
             preparedStatement.close();

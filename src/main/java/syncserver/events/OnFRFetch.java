@@ -28,12 +28,13 @@ public class OnFRFetch implements SyncServerFunction {
                 responseJSON.put("boosts_total", boostsTotal);
 
                 int boostsUsed = getBoostsUsed(userId);
-                if (boostsUsed != -1)
+                if (boostsUsed != -1) {
                     responseJSON.put("boosts_remaining", Math.max(0, boostsTotal - boostsUsed));
+                }
             }
 
             JSONArray jsonEntriesArray = new JSONArray();
-            FRPanelType[] types = new FRPanelType[]{ FRPanelType.PENDING, FRPanelType.REJECTED };
+            FRPanelType[] types = new FRPanelType[] { FRPanelType.PENDING, FRPanelType.REJECTED };
             for (FRPanelType type : types) {
                 DBFeatureRequests.fetchEntries(userId, type).forEach(frEntry -> {
                     JSONObject jsonEntry = new JSONObject()
@@ -56,15 +57,17 @@ public class OnFRFetch implements SyncServerFunction {
     }
 
     public static int getBoostsTotal(long userId) {
-        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId))
+        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
             return 0;
+        }
 
         return Math.max(1, PatreonCache.getInstance().getUserTier(userId));
     }
 
     public static int getBoostsUsed(long userId) {
-        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId))
+        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
             return 0;
+        }
 
         return DBFeatureRequests.fetchBoostsThisWeek(userId);
     }
