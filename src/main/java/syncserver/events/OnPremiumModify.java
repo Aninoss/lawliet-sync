@@ -1,10 +1,10 @@
 package syncserver.events;
 
+import java.util.HashMap;
+import core.cache.PatreonCache;
 import mysql.modules.premium.DBPremium;
 import org.json.JSONObject;
-import syncserver.ClientTypes;
-import syncserver.SyncServerEvent;
-import syncserver.SyncServerFunction;
+import syncserver.*;
 
 @SyncServerEvent(event = "PREMIUM_MODIFY")
 public class OnPremiumModify implements SyncServerFunction {
@@ -24,6 +24,7 @@ public class OnPremiumModify implements SyncServerFunction {
                 } else {
                     DBPremium.delete(userId, i);
                 }
+                broadcastPatreonData();
             }
 
             JSONObject jsonResponse = new JSONObject();
@@ -31,6 +32,17 @@ public class OnPremiumModify implements SyncServerFunction {
             return jsonResponse;
         }
         return null;
+    }
+
+    private void broadcastPatreonData() {
+        HashMap<Long, Integer> userTierMap = PatreonCache.getInstance().getUserTiersMap();
+        JSONObject jsonObject = PatreonCache.jsonFromUserPatreonMap(userTierMap);
+        ClusterConnectionManager.getInstance().getActiveClusters()
+                .forEach(c -> SendEvent.sendJSON(
+                        "PATREON",
+                        c.getClusterId(),
+                        jsonObject
+                ));
     }
 
 }

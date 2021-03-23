@@ -3,12 +3,39 @@ package mysql.modules.premium;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
 import mysql.DBMain;
+import syncserver.ClusterConnectionManager;
 
 public class DBPremium {
+
+    public static HashMap<Long, ArrayList<PremiumSlot>> fetchAll() {
+        HashMap<Long, ArrayList<PremiumSlot>> userSlotMap = new HashMap<>();
+        String sql = """
+                     SELECT userId, slot, serverId
+                     FROM Premium;
+                     """;
+
+        try {
+            Statement statement = DBMain.getInstance().statementExecuted(sql);
+            ResultSet resultSet = statement.getResultSet();
+            while(resultSet.next()) {
+                long userId = resultSet.getLong(1);
+                int slot = resultSet.getInt(2);
+                long guildId = resultSet.getLong(3);
+                userSlotMap.computeIfAbsent(userId, k -> new ArrayList<>())
+                        .add(new PremiumSlot(userId, slot, guildId));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return userSlotMap;
+    }
 
     public static HashMap<Integer, Long> fetchForUser(long userId) {
         HashMap<Integer, Long> map = new HashMap<>();
@@ -41,7 +68,10 @@ public class DBPremium {
     }
 
     public static boolean canModify(long userId, int i) {
-        boolean can = false;
+        if (userId == ClusterConnectionManager.OWNER_ID) {
+            return true;
+        }
+        boolean can;
 
         String sql = """
                      SELECT time

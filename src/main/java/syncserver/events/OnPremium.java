@@ -24,7 +24,8 @@ public class OnPremium implements SyncServerFunction {
             JSONArray jsonGuilds = new JSONArray();
 
             long userId = jsonObject.getLong("user_id");
-            int n = getAmountOfSlots(userId);
+            int tier = PatreonCache.getInstance().getUserTier(userId);
+            int n = PatreonCache.tierToPremiumSlotNumber(tier);
 
             if (n > 0) {
                 jsonGuilds = getMutualGuilds(userId);
@@ -69,17 +70,6 @@ public class OnPremium implements SyncServerFunction {
             return slotMap.get(i);
         }
         return 0;
-    }
-
-    private int getAmountOfSlots(long userId) {
-        int patreonTier = PatreonCache.getInstance().getUserTier(userId);
-        return switch (patreonTier) {
-            case 3 -> 1;
-            case 4 -> 2;
-            case 5 -> 5;
-            case 6 -> 10;
-            default -> 0;
-        };
     }
 
 }

@@ -1,6 +1,8 @@
 package core.cache;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import core.Program;
@@ -8,6 +10,8 @@ import core.internet.HttpProperty;
 import core.internet.HttpRequest;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.patreon.PatreonBean;
+import mysql.modules.premium.DBPremium;
+import mysql.modules.premium.PremiumSlot;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -55,6 +59,10 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
     public int getUserTier(long userId) {
         if (userId == ClusterConnectionManager.OWNER_ID) {
             return 6;
+        }
+
+        if (!Program.isProductionMode()) {
+            return 0;
         }
 
         return getAsync().getOrDefault(userId, 0);
@@ -130,18 +138,43 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         return patreonTiers;
     }
 
+    public static int tierToPremiumSlotNumber(int patreonTier) {
+        return switch (patreonTier) {
+            case 3 -> 1;
+            case 4 -> 2;
+            case 5 -> 5;
+            case 6 -> 10;
+            default -> 0;
+        };
+    }
+
     public static JSONObject jsonFromUserPatreonMap(HashMap<Long, Integer> userTiersMap) {
+        LinkedList<Long> unlockedGuilds = new LinkedList<>();
         JSONObject responseJson = new JSONObject();
         JSONArray usersArray = new JSONArray();
+        JSONArray guildsArray = new JSONArray();
+        HashMap<Long, ArrayList<PremiumSlot>> userSlotMap = DBPremium.fetchAll();
 
         userTiersMap.forEach((userId, tier) -> {
             JSONObject userJson = new JSONObject();
             userJson.put("user_id", userId);
             userJson.put("tier", tier);
             usersArray.put(userJson);
+
+            int slots = tierToPremiumSlotNumber(tier);
+            ArrayList<PremiumSlot> slotList = userSlotMap.get(userId);
+            if (slotList != null) {
+                slotList.stream()
+                        .filter(premiumSlot -> premiumSlot.getSlot() < slots && !unlockedGuilds.contains(premiumSlot.getGuildId()))
+                        .forEach(premiumSlot -> {
+                            unlockedGuilds.add(premiumSlot.getGuildId());
+                            guildsArray.put(premiumSlot.getGuildId());
+                        });
+            }
         });
 
         responseJson.put("users", usersArray);
+        responseJson.put("guilds", guildsArray);
         return responseJson;
     }
 
