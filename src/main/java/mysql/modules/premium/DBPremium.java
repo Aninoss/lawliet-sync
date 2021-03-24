@@ -109,14 +109,13 @@ public class DBPremium {
                      """;
 
         try {
-            PreparedStatement preparedStatement = DBMain.getInstance().preparedStatement(sql);
-            preparedStatement.setLong(1, userId);
-            preparedStatement.setInt(2, i);
-            preparedStatement.setLong(3, serverId);
-            preparedStatement.execute();
-            preparedStatement.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            DBMain.getInstance().update(sql, preparedStatement -> {
+                preparedStatement.setLong(1, userId);
+                preparedStatement.setInt(2, i);
+                preparedStatement.setLong(3, serverId);
+            });
+        } catch (SQLException | InterruptedException sqlException) {
+            throw new RuntimeException(sqlException);
         }
     }
 
@@ -127,12 +126,11 @@ public class DBPremium {
                      """;
 
         try {
-            PreparedStatement preparedStatement = DBMain.getInstance().preparedStatement(sql);
-            preparedStatement.setLong(1, userId);
-            preparedStatement.setInt(2, i);
-            preparedStatement.execute();
-            preparedStatement.close();
-        } catch (SQLException e) {
+            DBMain.getInstance().update(sql, preparedStatement -> {
+                preparedStatement.setLong(1, userId);
+                preparedStatement.setInt(2, i);
+            });
+        } catch (SQLException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

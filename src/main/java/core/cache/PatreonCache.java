@@ -152,6 +152,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         LinkedList<Long> unlockedGuilds = new LinkedList<>();
         JSONObject responseJson = new JSONObject();
         JSONArray usersArray = new JSONArray();
+        JSONArray oldUsersArray = new JSONArray();
         JSONArray guildsArray = new JSONArray();
         HashMap<Long, ArrayList<PremiumSlot>> userSlotMap = DBPremium.fetchAll();
 
@@ -173,7 +174,10 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             }
         });
 
+        DBPatreon.retrieveOldUsers().forEach(oldUsersArray::put);
+
         responseJson.put("users", usersArray);
+        responseJson.put("old_users", oldUsersArray);
         responseJson.put("guilds", guildsArray);
         return responseJson;
     }

@@ -2,6 +2,7 @@ package syncserver.events;
 
 import java.util.HashMap;
 import core.cache.PatreonCache;
+import mysql.modules.patreon.DBPatreon;
 import mysql.modules.premium.DBPremium;
 import org.json.JSONObject;
 import syncserver.*;
@@ -24,6 +25,7 @@ public class OnPremiumModify implements SyncServerFunction {
                 } else {
                     DBPremium.delete(userId, i);
                 }
+                DBPatreon.transferToNewSystem(userId);
                 broadcastPatreonData();
             }
 

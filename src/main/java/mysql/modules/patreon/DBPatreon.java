@@ -1,7 +1,10 @@
 package mysql.modules.patreon;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import mysql.DBDataLoad;
+import mysql.DBMain;
 import mysql.DBSingleBeanGenerator;
 
 public class DBPatreon extends DBSingleBeanGenerator<HashMap<Long, PatreonBean>> {
@@ -31,6 +34,26 @@ public class DBPatreon extends DBSingleBeanGenerator<HashMap<Long, PatreonBean>>
     @Override
     public Integer getExpirationTimeMinutes() {
         return 5;
+    }
+
+    public static ArrayList<Long> retrieveOldUsers() {
+        return new DBDataLoad<Long>("PatreonOld", "userId", "1")
+                .getArrayList(r -> r.getLong(1));
+    }
+
+    public static void transferToNewSystem(long userId) {
+        String sql = """
+                     DELETE FROM PatreonOld
+                     WHERE userId = ?;
+                     """;
+
+        try {
+            DBMain.getInstance().update(sql, preparedStatement -> {
+                preparedStatement.setLong(1, userId);
+            });
+        } catch (SQLException | InterruptedException sqlException) {
+            throw new RuntimeException(sqlException);
+        }
     }
 
 }
