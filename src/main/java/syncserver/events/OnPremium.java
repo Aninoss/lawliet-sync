@@ -2,6 +2,8 @@ package syncserver.events;
 
 import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import core.cache.PatreonCache;
 import core.cache.SingleCache;
 import mysql.modules.premium.DBPremium;
@@ -49,18 +51,20 @@ public class OnPremium implements SyncServerFunction {
         JSONObject jsonUserId = new JSONObject();
         jsonUserId.put("user_id", userId);
 
-        ClusterConnectionManager.getInstance().getActiveClusters().forEach(cluster -> {
-            try {
-                JSONArray jsonClusterGuilds = SendEvent.sendJSON("MUTUAL_SERVERS", cluster.getClusterId(), jsonUserId).get()
-                        .getJSONArray("guilds");
+        ClusterConnectionManager.getInstance().getActiveClusters().parallelStream()
+                .forEach(cluster -> {
+                    try {
+                        JSONArray jsonClusterGuilds = SendEvent.sendJSON("MUTUAL_SERVERS", cluster.getClusterId(), jsonUserId)
+                                .get(3, TimeUnit.SECONDS)
+                                .getJSONArray("guilds");
 
-                for (int i = 0; i < jsonClusterGuilds.length(); i++) {
-                    jsonGuilds.put(jsonClusterGuilds.getJSONObject(i));
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error("Exceptions on mutual servers", e);
-            }
-        });
+                        for (int i = 0; i < jsonClusterGuilds.length(); i++) {
+                            jsonGuilds.put(jsonClusterGuilds.getJSONObject(i));
+                        }
+                    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                        LOGGER.error("Exceptions on mutual servers", e);
+                    }
+                });
 
         return jsonGuilds;
     }
