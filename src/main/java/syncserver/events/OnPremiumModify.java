@@ -37,8 +37,9 @@ public class OnPremiumModify implements SyncServerFunction {
     }
 
     private void broadcastPatreonData() {
-        HashMap<Long, Integer> userTierMap = PatreonCache.getInstance().getUserTiersMap();
-        JSONObject jsonObject = PatreonCache.jsonFromUserPatreonMap(userTierMap);
+        HashMap<Long, Integer> patreonUserMap = PatreonCache.getInstance().getAsync();
+        HashMap<Long, Integer> userTierMap = PatreonCache.getInstance().getUserTiersMap(patreonUserMap);
+        JSONObject jsonObject = PatreonCache.jsonFromUserUserTiersMap(userTierMap);
         ClusterConnectionManager.getInstance().getActiveClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",

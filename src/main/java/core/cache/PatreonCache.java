@@ -68,8 +68,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         return getAsync().getOrDefault(userId, 0);
     }
 
-    public HashMap<Long, Integer> getUserTiersMap() {
-        HashMap<Long, Integer> userTiersMap = getAsync();
+    public HashMap<Long, Integer> getUserTiersMap(HashMap<Long, Integer> userTiersMap) {
         HashMap<Long, Integer> userTiersMapCombined = userTiersMap != null ? new HashMap<>(getAsync()) : new HashMap<>();
         HashMap<Long, PatreonBean> sqlMap = DBPatreon.getInstance().getBean();
 
@@ -148,7 +147,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         };
     }
 
-    public static JSONObject jsonFromUserPatreonMap(HashMap<Long, Integer> userTiersMap) {
+    public static JSONObject jsonFromUserUserTiersMap(HashMap<Long, Integer> userTiersMap) {
         LinkedList<Long> unlockedGuilds = new LinkedList<>();
         JSONObject responseJson = new JSONObject();
         JSONArray usersArray = new JSONArray();
