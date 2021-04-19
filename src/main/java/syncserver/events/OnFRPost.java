@@ -7,31 +7,40 @@ import syncserver.*;
 @SyncServerEvent(event = "FR_POST")
 public class OnFRPost implements SyncServerFunction {
 
+    private int counter = -1;
+
     @Override
     public JSONObject apply(String socketId, JSONObject requestJSON) {
         if (socketId.equals(ClientTypes.WEB)) {
             long userId = requestJSON.getLong("user_id");
             String title = requestJSON.getString("title");
             String desc = requestJSON.getString("description");
-            boolean notify = requestJSON.getBoolean("notify");
+            int id = getNextId();
 
-            DBFeatureRequests.postFeatureRequest(userId, title, desc);
+            DBFeatureRequests.postFeatureRequest(id, userId, title, desc);
             ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
                 SendEvent.sendUserNotification(
                         cluster.getClusterId(),
                         ClusterConnectionManager.OWNER_ID,
                         title,
                         desc,
-                        "FEATURE REQUEST",
+                        "Feature Request: " + id,
                         null,
                         null,
-                        notify ? String.valueOf(userId) : null
+                        String.valueOf(userId)
                 );
             });
 
             return new JSONObject();
         }
         return null;
+    }
+
+    private int getNextId() {
+        if (counter < 0) {
+            counter = DBFeatureRequests.getNewestId();
+        }
+        return ++counter;
     }
 
 }

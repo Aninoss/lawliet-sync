@@ -1,8 +1,12 @@
 package core;
 
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import core.util.SystemUtil;
+import mysql.modules.featurerequests.DBFeatureRequests;
+import mysql.modules.featurerequests.FREntryData;
+import mysql.modules.featurerequests.FRPanelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
@@ -48,6 +52,44 @@ public class Console {
         tasks.put("ratelimit", this::onRatelimit);
         tasks.put("connect", this::onConnect);
         tasks.put("cmd", this::onCmd);
+        tasks.put("fr", this::onFeatureRequest);
+    }
+
+    private void onFeatureRequest(String[] args) throws Exception {
+        boolean accept = switch (args[1].toLowerCase()) {
+            case "accept" -> true;
+            case "deny" -> false;
+            default -> throw new NoSuchMethodException("invalid method");
+        };
+
+        FREntryData entryData = DBFeatureRequests.fetchFeatureRequest(Integer.parseInt(args[2]));
+        String title;
+        String desc;
+        if (accept) {
+            DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.PENDING, true);
+            title = String.format("✅ Your feature request \"%s\" has been accepted", entryData.getTitle());
+            desc = "You should now [boost](https://lawlietbot.xyz/featurerequests?sortby=newest&page=1) your entry to increase it's exposure!";
+        } else {
+            DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.REJECTED, false);
+            title = String.format("❌ Unfortunately, your feature request \"%s\" got rejected", entryData.getTitle());
+            String content = collectArgs(args, 3);
+            desc = content.length() > 0 ? String.format("Reason:```%s```", collectArgs(args, 3)) : null;
+        }
+
+        ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
+            SendEvent.sendUserNotification(
+                    cluster.getClusterId(),
+                    entryData.getUserId(),
+                    title,
+                    desc,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        });
+
+        LOGGER.info("Feature Request Update Successful");
     }
 
     private void onCmd(String[] args) {
@@ -162,6 +204,14 @@ public class Console {
                 .filter(key -> !key.equals("help"))
                 .sorted()
                 .forEach(key -> System.out.println("- " + key));
+    }
+
+    private String collectArgs(String[] args, int firstIndex) {
+        StringBuilder argsString = new StringBuilder();
+        for (int i = firstIndex; i < args.length; i++) {
+            argsString.append(" ").append(args[i]);
+        }
+        return argsString.toString().trim();
     }
 
     private void manageConsole() {
