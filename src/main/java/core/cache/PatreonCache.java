@@ -39,13 +39,22 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             "5080991", 6
     );
 
+    private final Map<Integer, Integer> TIER_MAP_CENTS = Map.of(
+            100, 1,
+            300, 2,
+            500, 3,
+            1000, 4,
+            2500, 5,
+            5000, 6
+    );
+
     @Override
     protected HashMap<Long, Integer> fetchValue() {
         if (Program.isProductionMode()) {
             LOGGER.info("Updating Patreon tiers");
             try {
                 HashMap<Long, Integer> userTiers = new HashMap<>();
-                fetchFromUrl("https://www.patreon.com/api/oauth2/v2/campaigns/3334056/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=full_name,patron_status&fields%5Buser%5D=social_connections&page%5Bsize%5D=9999", userTiers);
+                fetchFromUrl("https://www.patreon.com/api/oauth2/v2/campaigns/3334056/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=full_name,patron_status,currently_entitled_amount_cents,pledge_cadence&fields%5Buser%5D=social_connections&page%5Bsize%5D=9999", userTiers);
                 LOGGER.info("Patreon update completed with {} users", userTiers.size());
 
                 return userTiers;
@@ -124,13 +133,35 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         for (int i = 0; i < dataJson.length(); i++) {
             JSONObject slotJson = dataJson.getJSONObject(i);
             JSONObject attributesJson = slotJson.getJSONObject("attributes");
+            JSONObject relationshipsJson = slotJson.getJSONObject("relationships");
+
             if (!attributesJson.isNull("patron_status") && attributesJson.getString("patron_status").equals("active_patron")) {
-                JSONObject relationshipsJson = slotJson.getJSONObject("relationships");
                 JSONArray entitledTiers = relationshipsJson.getJSONObject("currently_entitled_tiers").getJSONArray("data");
+                String id = relationshipsJson.getJSONObject("user").getJSONObject("data").getString("id");
                 if (entitledTiers.length() > 0) {
-                    String id = relationshipsJson.getJSONObject("user").getJSONObject("data").getString("id");
                     String tierId = entitledTiers.getJSONObject(0).getString("id");
                     patreonTiers.put(id, TIER_MAP.get(tierId));
+                } else {
+                    int entitledCents = attributesJson.getInt("currently_entitled_amount_cents");
+                    int pledgeCadence = attributesJson.getInt("pledge_cadence");
+                    if (entitledCents > 0) {
+                        if (pledgeCadence == 12) {
+                            entitledCents /= 10.08;
+                        }
+                        int minDiff = -1;
+                        int tier = 0;
+                        for (Map.Entry<Integer, Integer> entry : TIER_MAP_CENTS.entrySet()) {
+                            int diff = Math.abs(entry.getKey() - entitledCents);
+                            if (diff < minDiff || minDiff == -1) {
+                                minDiff = diff;
+                                tier = entry.getValue();
+                                if (minDiff == 0) {
+                                    break;
+                                }
+                            }
+                        }
+                        patreonTiers.put(id, tier);
+                    }
                 }
             }
         }
