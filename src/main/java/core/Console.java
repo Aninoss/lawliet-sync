@@ -3,6 +3,7 @@ package core;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import core.cache.PatreonCache;
 import core.util.SystemUtil;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FREntryData;
@@ -53,6 +54,11 @@ public class Console {
         tasks.put("connect", this::onConnect);
         tasks.put("cmd", this::onCmd);
         tasks.put("fr", this::onFeatureRequest);
+        tasks.put("patreon_update", this::onPatreonUpdate);
+    }
+
+    private void onPatreonUpdate(String[] args) {
+        PatreonCache.getInstance().fetch();
     }
 
     private void onFeatureRequest(String[] args) throws Exception {
