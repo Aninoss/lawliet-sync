@@ -22,7 +22,7 @@ public class OnFRPost implements SyncServerFunction {
                 SendEvent.sendUserNotification(
                         cluster.getClusterId(),
                         ClusterConnectionManager.OWNER_ID,
-                        title,
+                        title == null || title.isEmpty() ? "Empty Title" : title,
                         desc,
                         "Feature Request: " + id,
                         null,

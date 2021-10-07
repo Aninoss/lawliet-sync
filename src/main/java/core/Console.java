@@ -68,13 +68,14 @@ public class Console {
             default -> throw new NoSuchMethodException("invalid method");
         };
 
+        int id = Integer.parseInt(args[2]);
         FREntryData entryData = DBFeatureRequests.fetchFeatureRequest(Integer.parseInt(args[2]));
         String title;
         String desc;
         if (accept) {
             DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.PENDING, true);
             title = String.format("✅ Your feature request \"%s\" has been accepted", entryData.getTitle());
-            desc = "You should now [boost](https://lawlietbot.xyz/featurerequests?sortby=newest&page=1) your entry to increase it's exposure!";
+            desc = String.format("You should now [boost](https://lawlietbot.xyz/featurerequests?search=%d) your entry to increase it's exposure!", id);
         } else {
             DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.REJECTED, false);
             title = String.format("❌ Unfortunately, your feature request \"%s\" got rejected", entryData.getTitle());
