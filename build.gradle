@@ -29,6 +29,7 @@ dependencies {
     implementation 'mysql:mysql-connector-java:8.0.17'
     implementation 'ch.qos.logback:logback-classic:1.2.3'
     implementation 'org.apache.logging.log4j:log4j-to-slf4j:2.13.1'
+    implementation 'redis.clients:jedis:3.6.0'
 }
 
 application {
