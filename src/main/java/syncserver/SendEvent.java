@@ -69,9 +69,10 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "CMD", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendReport(long clusterId, String url) {
+    public static CompletableFuture<JSONObject> sendReport(long clusterId, String url, String text) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("url", url);
+        dataJson.put("text", text);
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "REPORT", dataJson);
     }
 
