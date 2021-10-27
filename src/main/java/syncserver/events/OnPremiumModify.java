@@ -1,7 +1,6 @@
 package syncserver.events;
 
-import java.util.HashMap;
-import core.cache.PatreonCache;
+import core.payments.PremiumManager;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.premium.DBPremium;
 import org.json.JSONObject;
@@ -37,9 +36,7 @@ public class OnPremiumModify implements SyncServerFunction {
     }
 
     private void broadcastPatreonData() {
-        HashMap<Long, Integer> patreonUserMap = PatreonCache.getInstance().getAsync();
-        HashMap<Long, Integer> userTierMap = PatreonCache.getInstance().getUserTiersMap(patreonUserMap);
-        JSONObject jsonObject = PatreonCache.jsonFromUserUserTiersMap(userTierMap);
+        JSONObject jsonObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getInstance().getActiveClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",

@@ -1,22 +1,18 @@
-package core.cache;
+package core.payments;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import core.Program;
+import core.SingleCache;
 import core.internet.HttpProperty;
 import core.internet.HttpRequest;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.patreon.PatreonBean;
-import mysql.modules.premium.DBPremium;
-import mysql.modules.premium.PremiumSlot;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import syncserver.ClusterConnectionManager;
 
 public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
 
@@ -63,36 +59,6 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             }
         }
         return null;
-    }
-
-    public int getUserTier(long userId) {
-        if (userId == ClusterConnectionManager.OWNER_ID) {
-            return 6;
-        }
-
-        if (!Program.isProductionMode()) {
-            return 0;
-        }
-
-        PatreonBean patreonBean = DBPatreon.getInstance().getBean().get(userId);
-        if (patreonBean != null && patreonBean.isValid()) {
-            return patreonBean.getTier();
-        }
-
-        return getAsync().getOrDefault(userId, 0);
-    }
-
-    public HashMap<Long, Integer> getUserTiersMap(HashMap<Long, Integer> userTiersMap) {
-        HashMap<Long, Integer> userTiersMapCombined = userTiersMap != null ? new HashMap<>(getAsync()) : new HashMap<>();
-        HashMap<Long, PatreonBean> sqlMap = DBPatreon.getInstance().getBean();
-
-        sqlMap.keySet().forEach(userId -> {
-            PatreonBean p = sqlMap.get(userId);
-            if (p.isValid()) {
-                userTiersMapCombined.put(userId, p.getTier());
-            }
-        });
-        return userTiersMapCombined;
     }
 
     @Override
@@ -173,48 +139,17 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         return patreonTiers;
     }
 
-    public static int tierToPremiumSlotNumber(int patreonTier) {
-        return switch (patreonTier) {
-            case 3 -> 1;
-            case 4 -> 2;
-            case 5 -> 5;
-            case 6 -> 10;
-            default -> 0;
-        };
-    }
+    public int getUserTier(long userId) {
+        if (!Program.isProductionMode()) {
+            return 0;
+        }
 
-    public static JSONObject jsonFromUserUserTiersMap(HashMap<Long, Integer> userTiersMap) {
-        LinkedList<Long> unlockedGuilds = new LinkedList<>();
-        JSONObject responseJson = new JSONObject();
-        JSONArray usersArray = new JSONArray();
-        JSONArray oldUsersArray = new JSONArray();
-        JSONArray guildsArray = new JSONArray();
-        HashMap<Long, ArrayList<PremiumSlot>> userSlotMap = DBPremium.fetchAll();
+        PatreonBean patreonBean = DBPatreon.getInstance().getBean().get(userId);
+        if (patreonBean != null && patreonBean.isValid()) {
+            return patreonBean.getTier();
+        }
 
-        userTiersMap.forEach((userId, tier) -> {
-            JSONObject userJson = new JSONObject();
-            userJson.put("user_id", userId);
-            userJson.put("tier", tier);
-            usersArray.put(userJson);
-
-            int slots = tierToPremiumSlotNumber(tier);
-            ArrayList<PremiumSlot> slotList = userSlotMap.get(userId);
-            if (slotList != null) {
-                slotList.stream()
-                        .filter(premiumSlot -> premiumSlot.getSlot() < slots && !unlockedGuilds.contains(premiumSlot.getGuildId()))
-                        .forEach(premiumSlot -> {
-                            unlockedGuilds.add(premiumSlot.getGuildId());
-                            guildsArray.put(premiumSlot.getGuildId());
-                        });
-            }
-        });
-
-        DBPatreon.retrieveOldUsers().forEach(oldUsersArray::put);
-
-        responseJson.put("users", usersArray);
-        responseJson.put("old_users", oldUsersArray);
-        responseJson.put("guilds", guildsArray);
-        return responseJson;
+        return getAsync().getOrDefault(userId, 0);
     }
 
 }

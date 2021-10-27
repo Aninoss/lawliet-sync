@@ -1,8 +1,8 @@
 package syncserver.events;
 
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
-import core.cache.PatreonCache;
+import core.payments.PatreonCache;
+import core.payments.PremiumManager;
 import org.json.JSONObject;
 import syncserver.*;
 
@@ -14,8 +14,7 @@ public class OnPatreonFetch implements SyncServerFunction {
         if (socketId.startsWith(ClientTypes.CLUSTER)) {
             CompletableFuture.supplyAsync(() -> PatreonCache.getInstance().fetch())
                     .thenAccept(patreonMap -> {
-                        HashMap<Long, Integer> userTierMap = PatreonCache.getInstance().getUserTiersMap(patreonMap);
-                        JSONObject jsonObject = PatreonCache.jsonFromUserUserTiersMap(userTierMap);
+                        JSONObject jsonObject = PremiumManager.retrieveJsonData();
                         ClusterConnectionManager.getInstance().getActiveClusters()
                                 .forEach(c -> SendEvent.sendJSON(
                                         "PATREON",

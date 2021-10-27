@@ -1,6 +1,6 @@
 package syncserver.events;
 
-import core.cache.PatreonCache;
+import core.payments.PremiumManager;
 import mysql.modules.bannedusers.DBBannedUsers;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FRPanelType;
@@ -60,15 +60,13 @@ public class OnFRFetch implements SyncServerFunction {
         if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
             return 0;
         }
-
-        return Math.max(1, PatreonCache.getInstance().getUserTier(userId));
+        return PremiumManager.retrieveBoostsTotal(userId);
     }
 
     public static int getBoostsUsed(long userId) {
         if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
             return 0;
         }
-
         return DBFeatureRequests.fetchBoostsThisWeek(userId);
     }
 

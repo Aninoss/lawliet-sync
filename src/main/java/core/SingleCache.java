@@ -1,8 +1,7 @@
-package core.cache;
+package core;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import core.GlobalThreadPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

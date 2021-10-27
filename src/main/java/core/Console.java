@@ -1,9 +1,8 @@
 package core;
 
 import java.util.HashMap;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
-import core.cache.PatreonCache;
+import core.payments.PatreonCache;
 import core.util.SystemUtil;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FREntryData;

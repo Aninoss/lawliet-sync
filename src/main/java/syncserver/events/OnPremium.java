@@ -1,7 +1,7 @@
 package syncserver.events;
 
 import java.util.HashMap;
-import core.cache.PatreonCache;
+import core.payments.PremiumManager;
 import mysql.modules.premium.DBPremium;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,8 +20,7 @@ public class OnPremium implements SyncServerFunction {
             JSONArray jsonGuilds = new JSONArray();
 
             long userId = jsonObject.getLong("user_id");
-            int tier = PatreonCache.getInstance().getUserTier(userId);
-            int n = PatreonCache.tierToPremiumSlotNumber(tier);
+            int n = PremiumManager.retrieveUnlockServersNumber(userId);
 
             HashMap<Integer, Long> slotMap = DBPremium.fetchForUser(userId);
             for (int i = 0; i < n; i++) {
