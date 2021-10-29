@@ -2,7 +2,6 @@ package syncserver.events;
 
 import java.time.Instant;
 import mysql.RedisManager;
-import mysql.modules.featurerequests.DBFeatureRequests;
 import org.json.JSONObject;
 import syncserver.*;
 
@@ -15,8 +14,7 @@ public class OnReport implements SyncServerFunction {
             String url = requestJSON.getString("url");
             String text = requestJSON.getString("text");
             RedisManager.update(jedis -> {
-                String instant = jedis.hget("reports", url);
-                if (instant == null) {
+                if (!jedis.hexists("reports", url) && !jedis.hexists("reports_whitelist", url)) {
                     Cluster cluster = ClusterConnectionManager.getInstance().getResponsibleCluster(557953262305804308L);
                     SendEvent.sendReport(cluster.getClusterId(), url, text).join();
                     jedis.hset("reports", url, Instant.now().toString());
