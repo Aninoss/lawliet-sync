@@ -21,13 +21,14 @@ public class OnStripe implements SyncServerFunction {
                 ));
 
         long userId = dataJson.getLong("user_id");
-        String text = dataJson.getString("text");
+        String title = dataJson.getString("title");
+        String desc = dataJson.getString("desc");
         ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
             SendEvent.sendUserNotification(
                     cluster.getClusterId(),
                     userId,
-                    null,
-                    text,
+                    title,
+                    desc,
                     null,
                     null,
                     null,
