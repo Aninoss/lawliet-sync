@@ -1,9 +1,11 @@
 package core;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Scanner;
 import core.payments.PatreonCache;
 import core.util.SystemUtil;
+import mysql.RedisManager;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FREntryData;
 import mysql.modules.featurerequests.FRPanelType;
@@ -54,6 +56,24 @@ public class Console {
         tasks.put("cmd", this::onCmd);
         tasks.put("fr", this::onFeatureRequest);
         tasks.put("patreon_update", this::onPatreonUpdate);
+        tasks.put("reports_ban", this::onReportsBan);
+        tasks.put("reports_unban", this::onReportsUnban);
+    }
+
+    private void onReportsBan(String[] args) {
+        String ipHash = args[1];
+        RedisManager.update(jedis -> {
+            jedis.hset("reports_banned", ipHash, Instant.now().toString());
+        });
+        LOGGER.info("{} got successfully banned from reports", ipHash);
+    }
+
+    private void onReportsUnban(String[] args) {
+        String ipHash = args[1];
+        RedisManager.update(jedis -> {
+            jedis.hdel("reports_banned", ipHash);
+        });
+        LOGGER.info("{} got successfully unbanned from reports", ipHash);
     }
 
     private void onPatreonUpdate(String[] args) {

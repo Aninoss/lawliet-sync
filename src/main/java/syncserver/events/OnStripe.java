@@ -2,6 +2,8 @@ package syncserver.events;
 
 import core.payments.PremiumManager;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import syncserver.ClusterConnectionManager;
 import syncserver.SendEvent;
 import syncserver.SyncServerEvent;
@@ -10,8 +12,12 @@ import syncserver.SyncServerFunction;
 @SyncServerEvent(event = "STRIPE")
 public class OnStripe implements SyncServerFunction {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(OnStripe.class);
+
     @Override
     public JSONObject apply(String socketId, JSONObject dataJson) {
+        LOGGER.info("New subscription received");
+
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getInstance().getActiveClusters()
                 .forEach(c -> SendEvent.sendJSON(
