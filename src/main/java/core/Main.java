@@ -2,6 +2,7 @@ package core;
 
 import com.stripe.Stripe;
 import core.payments.PatreonCache;
+import core.payments.StripeCache;
 import mysql.DBMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ public class Main {
             Program.init();
             Console.getInstance().start();
             DBMain.getInstance().connect();
+            StripeCache.startScheduler();
             PatreonCache.getInstance().fetch();
             SyncManager.getInstance().start();
         } catch (Throwable e) {

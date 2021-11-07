@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Subscription;
-import com.stripe.param.SubscriptionListParams;
 
 public class StripeManager {
 
@@ -25,11 +24,7 @@ public class StripeManager {
     }
 
     public static List<Subscription> retrieveActiveSubscriptions(long userId) throws StripeException {
-        return Subscription.list(SubscriptionListParams.builder()
-                        .setStatus(SubscriptionListParams.Status.ACTIVE)
-                        .build()
-                )
-                .getData()
+        return StripeCache.getSubscriptions()
                 .stream()
                 .filter(sub -> userId == 0L ||
                         (sub.getMetadata().containsKey("discord_id") && sub.getMetadata().get("discord_id").equals(String.valueOf(userId)))

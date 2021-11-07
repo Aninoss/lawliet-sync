@@ -1,6 +1,8 @@
 package syncserver.events;
 
+import com.stripe.exception.StripeException;
 import core.payments.PremiumManager;
+import core.payments.StripeCache;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,11 @@ public class OnStripe implements SyncServerFunction {
     @Override
     public JSONObject apply(String socketId, JSONObject dataJson) {
         LOGGER.info("New subscription received");
+        try {
+            StripeCache.reload();
+        } catch (StripeException e) {
+            LOGGER.error("Stripe error");
+        }
 
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getInstance().getActiveClusters()
