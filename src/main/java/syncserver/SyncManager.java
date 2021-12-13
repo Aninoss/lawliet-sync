@@ -60,7 +60,14 @@ public class SyncManager {
     private void addEvent(SyncServerFunction function) {
         SyncServerEvent event = function.getClass().getAnnotation(SyncServerEvent.class);
         if (event != null) {
-            this.server.addEventHandler(event.event(), function);
+            this.server.addEventHandler(event.event(), (socketId, requestJson) -> {
+                try {
+                    return function.apply(socketId, requestJson);
+                } catch (Throwable e) {
+                    LOGGER.error("Uncached websocket error", e);
+                    return null;
+                }
+            });
         }
     }
 
