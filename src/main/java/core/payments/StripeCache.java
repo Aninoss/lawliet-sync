@@ -1,5 +1,6 @@
 package core.payments;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -30,11 +31,14 @@ public class StripeCache {
     }
 
     public static void reload() throws StripeException {
-        subscriptions = Subscription.list(SubscriptionListParams.builder()
+        ArrayList<Subscription> subscriptionList = new ArrayList<>();
+        Iterable<Subscription> subscriptionIterable = Subscription.list(SubscriptionListParams.builder()
                 .setStatus(SubscriptionListParams.Status.ACTIVE)
-                .setLimit(9999L)
+                .setLimit(100L)
                 .build()
-        ).getData();
+        ).autoPagingIterable();
+        subscriptionIterable.forEach(subscriptionList::add);
+        subscriptions = Collections.unmodifiableList(subscriptionList);
 
         LOGGER.info("Stripe load successful");
     }
