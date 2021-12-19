@@ -40,7 +40,7 @@ public class StripeCache {
         subscriptionIterable.forEach(subscriptionList::add);
         subscriptions = Collections.unmodifiableList(subscriptionList);
 
-        LOGGER.info("Stripe load successful");
+        LOGGER.info("Stripe load successful ({})", subscriptions.size());
     }
 
     public static List<Subscription> getSubscriptions() {

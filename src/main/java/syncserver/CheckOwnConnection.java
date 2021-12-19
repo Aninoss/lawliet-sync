@@ -14,7 +14,7 @@ public class CheckOwnConnection {
 
     private static WebSocketJsonClient client = null;
 
-    public static  void startScheduler() {
+    public static void startScheduler() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -24,15 +24,9 @@ public class CheckOwnConnection {
                 }
                 client.send("PING", new JSONObject()).get(5, TimeUnit.SECONDS);
             } catch (Throwable e) {
-                LOGGER.error("Connection error", e);
-                onConnectionError();
+                Runtime.getRuntime().halt(2);
             }
         }, 3, 3, TimeUnit.SECONDS);
-    }
-
-    private static void onConnectionError() {
-        LOGGER.error("Connection error");
-        System.exit(2);
     }
 
 }

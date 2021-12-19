@@ -45,7 +45,8 @@ public class OnStripe implements SyncServerFunction {
                     null,
                     null,
                     null,
-                    null
+                    null,
+                    60_000
             );
         });
 

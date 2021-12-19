@@ -43,6 +43,10 @@ public class SendEvent {
     }
 
     public static CompletableFuture<JSONObject> sendUserNotification(long clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer) {
+        return sendUserNotification(clusterId, userId, title, description, author, thumbnail, image, footer, 0);
+    }
+
+    public static CompletableFuture<JSONObject> sendUserNotification(long clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer, int delay) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("user_id", userId)
                 .put("title", title)
@@ -50,7 +54,8 @@ public class SendEvent {
                 .put("author", author)
                 .put("thumbnail", thumbnail)
                 .put("image", image)
-                .put("footer", footer);
+                .put("footer", footer)
+                .put("delay", delay);
 
         return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "NOTIFY", dataJson);
     }
