@@ -1,10 +1,15 @@
 package syncserver.events;
 
-import core.ExceptionLogger;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import syncserver.*;
+import syncserver.ClientTypes;
+import syncserver.SendEvent;
+import syncserver.SyncServerEvent;
+import syncserver.SyncServerFunction;
 
 @SyncServerEvent(event = "TOPGG")
 public class OnTopGG implements SyncServerFunction {
@@ -13,15 +18,18 @@ public class OnTopGG implements SyncServerFunction {
 
     @Override
     public JSONObject apply(String socketId, JSONObject jsonObject) {
+        JSONObject responseJson = new JSONObject();
+        responseJson.put("success", false);
         if (socketId.equals(ClientTypes.WEB)) {
             LOGGER.info("UPVOTE | {}", jsonObject.getLong("user"));
-            ClusterConnectionManager.getInstance().getActiveClusters()
-                    .forEach(c -> {
-                        SendEvent.sendJSONSecure("TOPGG", c.getClusterId(), jsonObject)
-                                .exceptionally(ExceptionLogger.get());
-                    });
+            try {
+                SendEvent.sendJSON("TOPGG", 1, jsonObject).get(5, TimeUnit.SECONDS);
+                responseJson.put("success", true);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                LOGGER.error("Error", e);
+            }
         }
-        return null;
+        return responseJson;
     }
 
 }
