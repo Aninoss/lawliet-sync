@@ -1,4 +1,4 @@
-package core.payments;
+package core.payments.stripe;
 
 import java.util.ArrayList;
 import java.util.Collections;

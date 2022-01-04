@@ -1,16 +1,15 @@
-package core.payments;
+package core.payments.stripe;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import com.stripe.exception.StripeException;
 import com.stripe.model.Subscription;
 
 public class StripeManager {
 
-    public static Map<Long, ArrayList<Subscription>> retrieveActiveSubscriptions() throws StripeException {
+    public static Map<Long, ArrayList<Subscription>> retrieveActiveSubscriptions() {
         HashMap<Long, ArrayList<Subscription>> map = new HashMap<>();
         for (Subscription subscription : retrieveActiveSubscriptions(0L)) {
             if (subscription.getMetadata().containsKey("discord_id")) {
@@ -23,7 +22,7 @@ public class StripeManager {
         return map;
     }
 
-    public static List<Subscription> retrieveActiveSubscriptions(long userId) throws StripeException {
+    public static List<Subscription> retrieveActiveSubscriptions(long userId) {
         return StripeCache.getSubscriptions()
                 .stream()
                 .filter(sub -> userId == 0L ||

@@ -1,8 +1,13 @@
 package core.payments;
 
-import java.util.*;
-import com.stripe.exception.StripeException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import com.stripe.model.Subscription;
+import core.payments.paddle.PaddleManager;
+import core.payments.paddle.PaddleSubscription;
+import core.payments.stripe.StripeManager;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.patreon.PatreonBean;
 import mysql.modules.premium.DBPremium;
@@ -19,27 +24,26 @@ public class PremiumManager {
     public static int retrieveBoostsTotal(long userId) {
         int patreonBoosts = PatreonCache.getInstance().getUserTier(userId) - 1;
         int stripeBoosts = 0;
-        try {
-            if (StripeManager.retrieveActiveSubscriptions(userId).size() > 0) {
-                stripeBoosts = 2;
-            }
-        } catch (StripeException e) {
-            LOGGER.error("Stripe exception", e);
+        if (StripeManager.retrieveActiveSubscriptions(userId).size() > 0) {
+            stripeBoosts = 2;
+        } else if (PaddleManager.retrieveActiveSubscriptions(userId).size() > 0) {
+            stripeBoosts = 2;
         }
         return 1 + Math.max(patreonBoosts, stripeBoosts);
     }
 
     public static int retrieveUnlockServersNumber(long userId) {
         int n = tierToPremiumSlotNumber(PatreonCache.getInstance().getUserTier(userId));
-        try {
-            for (Subscription subscription : StripeManager.retrieveActiveSubscriptions(userId)) {
-                Map<String, String> metadata = subscription.getMetadata();
-                if (subscription.getMetadata().containsKey("unlock_servers") && Boolean.parseBoolean(metadata.get("unlock_servers"))) {
-                    n += subscription.getItems().getData().get(0).getQuantity();
-                }
+        for (Subscription subscription : StripeManager.retrieveActiveSubscriptions(userId)) {
+            Map<String, String> metadata = subscription.getMetadata();
+            if (subscription.getMetadata().containsKey("unlock_servers") && Boolean.parseBoolean(metadata.get("unlock_servers"))) {
+                n += subscription.getItems().getData().get(0).getQuantity();
             }
-        } catch (StripeException e) {
-            LOGGER.error("Stripe exception", e);
+        }
+        for (PaddleSubscription subscription : PaddleManager.retrieveActiveSubscriptions(userId)) {
+            if (subscription.unlocksServer()) {
+                n += subscription.getQuantity();
+            }
         }
 
         return n;
@@ -53,17 +57,19 @@ public class PremiumManager {
         JSONArray guildsArray = new JSONArray();
         HashMap<Long, ArrayList<PremiumSlot>> userSlotMap = DBPremium.fetchAll();
         HashMap<Long, Integer> patreonTiers = insertDatabasePatreons(PatreonCache.getInstance().getAsync());
-        Map<Long, ArrayList<Subscription>> stripeMap = null;
-        try {
-            stripeMap = StripeManager.retrieveActiveSubscriptions();
-            for (long userId : stripeMap.keySet()) {
-                patreonTiers.putIfAbsent(userId, 2);
-            }
-        } catch (StripeException e) {
-            LOGGER.error("Stripe exception", e);
+
+        Map<Long, ArrayList<Subscription>> stripeMap = StripeManager.retrieveActiveSubscriptions();
+        for (long userId : stripeMap.keySet()) {
+            patreonTiers.putIfAbsent(userId, 2);
+        }
+
+        Map<Long, ArrayList<PaddleSubscription>> paddleMap = PaddleManager.retrieveActiveSubscriptions();
+        for (long userId : paddleMap.keySet()) {
+            patreonTiers.putIfAbsent(userId, 2);
         }
 
         Map<Long, ArrayList<Subscription>> finalStripeMap = stripeMap;
+        Map<Long, ArrayList<PaddleSubscription>> finalPaddleMap = paddleMap;
         patreonTiers.forEach((userId, tier) -> {
             JSONObject userJson = new JSONObject();
             userJson.put("user_id", userId);
@@ -71,10 +77,16 @@ public class PremiumManager {
             usersArray.put(userJson);
 
             int slots = tierToPremiumSlotNumber(tier);
-            if (finalStripeMap != null && finalStripeMap.containsKey(userId)) {
+            if (finalStripeMap.containsKey(userId)) {
                 slots += finalStripeMap.get(userId).stream()
                         .filter(s -> s.getMetadata().containsKey("unlock_servers") && Boolean.parseBoolean(s.getMetadata().get("unlock_servers")))
                         .mapToInt(s -> Math.toIntExact(s.getItems().getData().get(0).getQuantity()))
+                        .sum();
+            }
+            if (finalPaddleMap.containsKey(userId)) {
+                slots += finalPaddleMap.get(userId).stream()
+                        .filter(PaddleSubscription::unlocksServer)
+                        .mapToInt(PaddleSubscription::getQuantity)
                         .sum();
             }
             ArrayList<PremiumSlot> slotList = userSlotMap.get(userId);

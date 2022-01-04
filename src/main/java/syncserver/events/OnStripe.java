@@ -1,8 +1,12 @@
 package syncserver.events;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import com.stripe.exception.StripeException;
 import core.payments.PremiumManager;
-import core.payments.StripeCache;
+import core.payments.paddle.PaddleCache;
+import core.payments.stripe.StripeCache;
+import mysql.modules.paddlesubscriptions.DBPaddleSubscriptions;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +23,27 @@ public class OnStripe implements SyncServerFunction {
     @Override
     public JSONObject apply(String socketId, JSONObject dataJson) {
         LOGGER.info("New subscription received");
-        try {
-            StripeCache.reload();
-        } catch (StripeException e) {
-            LOGGER.error("Stripe error");
+
+        long userId = dataJson.getLong("user_id");
+        int subId = dataJson.getInt("sub_id");
+        if (subId != 0) {
+            boolean unlocksServer = dataJson.getBoolean("unlocks_server");
+            try {
+                DBPaddleSubscriptions.savePaddleSubscription(subId, userId, unlocksServer);
+            } catch (SQLException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                PaddleCache.reload();
+            } catch (IOException e) {
+                LOGGER.error("Paddle error");
+            }
+        } else {
+            try {
+                StripeCache.reload();
+            } catch (StripeException e) {
+                LOGGER.error("Stripe error");
+            }
         }
 
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
@@ -33,7 +54,6 @@ public class OnStripe implements SyncServerFunction {
                         jsonObject
                 ));
 
-        long userId = dataJson.getLong("user_id");
         String title = dataJson.getString("title");
         String desc = dataJson.getString("desc");
         ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {

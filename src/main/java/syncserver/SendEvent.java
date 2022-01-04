@@ -90,10 +90,6 @@ public class SendEvent {
         return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
     }
 
-    public static CompletableFuture<JSONObject> sendJSONSecure(String event, long clusterId, JSONObject jsonObject) {
-        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
-    }
-
     private static <T> CompletableFuture<T> process(long clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
         CompletableFuture<T> future = new CompletableFuture<>();
 
