@@ -35,7 +35,6 @@ public class PaddleAPI {
         for(int page = 1; array == null || array.length() >= 200; page++) {
             array = retrieveSubscriptions(page).getJSONArray("response");
             for (int i = 0; i < array.length(); i++) {
-                System.out.println(array.getJSONObject(i).getString("state")); //TODO
                 subs.add(array.getJSONObject(i));
             }
         }
@@ -46,7 +45,6 @@ public class PaddleAPI {
         RequestBody formBody = new FormBody.Builder()
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
-                .add("state", "active")
                 .add("results_per_page", "200")
                 .add("page", String.valueOf(page))
                 .build();

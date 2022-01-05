@@ -22,6 +22,13 @@ public class PaddleManager {
     public static List<PaddleSubscription> retrieveActiveSubscriptions(long userId) {
         return PaddleCache.getSubscriptions()
                 .stream()
+                .filter(sub -> (userId == 0L || sub.getUserId() == userId) && sub.getStatus().equals("active"))
+                .collect(Collectors.toList());
+    }
+
+    public static List<PaddleSubscription> retrieveSubscriptions(long userId) {
+        return PaddleCache.getSubscriptions()
+                .stream()
                 .filter(sub -> userId == 0L || sub.getUserId() == userId)
                 .collect(Collectors.toList());
     }

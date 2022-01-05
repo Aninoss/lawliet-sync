@@ -1,7 +1,11 @@
 package core.payments.paddle;
 
 import java.io.IOException;
-import java.util.*;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +40,16 @@ public class PaddleCache {
                     int subId = json.getInt("subscription_id");
                     PaddleData data = paddleDBMap.get(subId);
                     if (data != null) {
-                        return new PaddleSubscription(data.getSubId(), data.getUserId(), data.unlocksServer(), json.getInt("quantity"));
+                        return new PaddleSubscription(
+                                data.getSubId(),
+                                json.getInt("plan_id"),
+                                data.getUserId(),
+                                data.unlocksServer(),
+                                json.getInt("quantity"),
+                                json.getString("state"),
+                                String.format("%s %.02f", json.getJSONObject("last_payment").getString("currency"), json.getJSONObject("last_payment").getDouble("amount")),
+                                json.has("next_payment") ? LocalDate.parse(json.getJSONObject("next_payment").getString("date")) : null
+                        );
                     } else {
                         return null;
                     }

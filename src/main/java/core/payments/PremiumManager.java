@@ -14,12 +14,8 @@ import mysql.modules.premium.DBPremium;
 import mysql.modules.premium.PremiumSlot;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PremiumManager {
-
-    private final static Logger LOGGER = LoggerFactory.getLogger(PremiumManager.class);
 
     public static int retrieveBoostsTotal(long userId) {
         int patreonBoosts = PatreonCache.getInstance().getUserTier(userId) - 1;
@@ -68,8 +64,6 @@ public class PremiumManager {
             patreonTiers.putIfAbsent(userId, 2);
         }
 
-        Map<Long, ArrayList<Subscription>> finalStripeMap = stripeMap;
-        Map<Long, ArrayList<PaddleSubscription>> finalPaddleMap = paddleMap;
         patreonTiers.forEach((userId, tier) -> {
             JSONObject userJson = new JSONObject();
             userJson.put("user_id", userId);
@@ -77,14 +71,14 @@ public class PremiumManager {
             usersArray.put(userJson);
 
             int slots = tierToPremiumSlotNumber(tier);
-            if (finalStripeMap.containsKey(userId)) {
-                slots += finalStripeMap.get(userId).stream()
+            if (stripeMap.containsKey(userId)) {
+                slots += stripeMap.get(userId).stream()
                         .filter(s -> s.getMetadata().containsKey("unlock_servers") && Boolean.parseBoolean(s.getMetadata().get("unlock_servers")))
                         .mapToInt(s -> Math.toIntExact(s.getItems().getData().get(0).getQuantity()))
                         .sum();
             }
-            if (finalPaddleMap.containsKey(userId)) {
-                slots += finalPaddleMap.get(userId).stream()
+            if (paddleMap.containsKey(userId)) {
+                slots += paddleMap.get(userId).stream()
                         .filter(PaddleSubscription::unlocksServer)
                         .mapToInt(PaddleSubscription::getQuantity)
                         .sum();
