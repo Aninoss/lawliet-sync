@@ -50,7 +50,7 @@ public class PaddleAPI {
                 .build();
 
         Request request = new Request.Builder()
-                .url("https://sandbox-vendors.paddle.com/api/2.0/subscription/users") //TODO
+                .url("https://vendors.paddle.com/api/2.0/subscription/users")
                 .post(formBody)
                 .addHeader("User-Agent", USER_AGENT)
                 .build();

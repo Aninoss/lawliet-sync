@@ -25,7 +25,7 @@ public class OnStripe implements SyncServerFunction {
         LOGGER.info("New subscription received");
 
         long userId = dataJson.getLong("user_id");
-        int subId = dataJson.getInt("sub_id");
+        int subId = dataJson.has("sub_id") ? dataJson.getInt("sub_id") : 0;
         if (subId != 0) {
             boolean unlocksServer = dataJson.getBoolean("unlocks_server");
             try {
