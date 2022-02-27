@@ -15,7 +15,13 @@ public class OnPaddleSubscriptions implements SyncServerFunction {
     @Override
     public JSONObject apply(String socketId, JSONObject dataJson) {
         long userId = dataJson.getLong("user_id");
-        if (dataJson.getBoolean("clear_subscription_cache")) {
+        if (dataJson.has("reload_sub_id")) {
+            try {
+                PaddleCache.reload(dataJson.getInt("reload_sub_id"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (dataJson.getBoolean("clear_subscription_cache")) {
             try {
                 PaddleCache.reload();
             } catch (IOException e) {

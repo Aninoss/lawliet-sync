@@ -34,7 +34,7 @@ public class OnStripe implements SyncServerFunction {
                 throw new RuntimeException(e);
             }
             try {
-                PaddleCache.reload();
+                PaddleCache.reload(subId);
             } catch (IOException e) {
                 LOGGER.error("Paddle error");
             }

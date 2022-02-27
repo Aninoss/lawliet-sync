@@ -30,10 +30,14 @@ public class PaddleAPI {
     }
 
     public static List<JSONObject> retrieveSubscriptions() throws IOException {
+        return retrieveSubscriptions(0);
+    }
+
+    public static List<JSONObject> retrieveSubscriptions(int subId) throws IOException {
         ArrayList<JSONObject> subs = new ArrayList<>();
         JSONArray array = null;
         for(int page = 1; array == null || array.length() >= 200; page++) {
-            array = retrieveSubscriptions(page).getJSONArray("response");
+            array = retrieveSubscriptions(subId, page).getJSONArray("response");
             for (int i = 0; i < array.length(); i++) {
                 subs.add(array.getJSONObject(i));
             }
@@ -41,13 +45,16 @@ public class PaddleAPI {
         return Collections.unmodifiableList(subs);
     }
 
-    private static JSONObject retrieveSubscriptions(int page) throws IOException {
-        RequestBody formBody = new FormBody.Builder()
+    private static JSONObject retrieveSubscriptions(int subId, int page) throws IOException {
+        FormBody.Builder formBodyBuilder = new FormBody.Builder()
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
                 .add("results_per_page", "200")
-                .add("page", String.valueOf(page))
-                .build();
+                .add("page", String.valueOf(page));
+        if (subId > 0) {
+            formBodyBuilder = formBodyBuilder.add("subscription_id", String.valueOf(subId));
+        }
+        RequestBody formBody = formBodyBuilder.build();
 
         Request request = new Request.Builder()
                 .url("https://vendors.paddle.com/api/2.0/subscription/users")
