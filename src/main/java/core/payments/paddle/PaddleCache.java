@@ -27,7 +27,7 @@ public class PaddleCache {
             } catch (Throwable e) {
                 LOGGER.error("Paddle error", e);
             }
-        }, 5, 5, TimeUnit.MINUTES);
+        }, 20, 20, TimeUnit.MINUTES);
     }
 
     public static synchronized void reload() throws IOException {

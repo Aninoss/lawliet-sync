@@ -50,6 +50,7 @@ public class PaddleAPI {
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
                 .add("results_per_page", "200")
+                .add("state", "active")
                 .add("page", String.valueOf(page));
         if (subId > 0) {
             formBodyBuilder = formBodyBuilder.add("subscription_id", String.valueOf(subId));

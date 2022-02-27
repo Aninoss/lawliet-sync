@@ -21,12 +21,6 @@ public class OnPaddleSubscriptions implements SyncServerFunction {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } else if (dataJson.getBoolean("clear_subscription_cache")) {
-            try {
-                PaddleCache.reload();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
         }
 
         JSONArray subsJson = new JSONArray();
