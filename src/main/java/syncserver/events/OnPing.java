@@ -8,8 +8,9 @@ public class OnPing implements SyncServerFunction {
 
     @Override
     public JSONObject apply(String socketId, JSONObject jsonObject) {
-        SyncManager.getInstance().getServer().send(socketId, "PING", new JSONObject());
-        return null;
+        JSONObject response = new JSONObject();
+        response.put("ping", "pong");
+        return response;
     }
 
 }
