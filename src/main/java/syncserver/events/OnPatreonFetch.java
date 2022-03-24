@@ -10,19 +10,17 @@ import syncserver.*;
 public class OnPatreonFetch implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject dataJson) {
-        if (socketId.startsWith(ClientTypes.CLUSTER)) {
-            CompletableFuture.supplyAsync(() -> PatreonCache.getInstance().fetch())
-                    .thenAccept(patreonMap -> {
-                        JSONObject jsonObject = PremiumManager.retrieveJsonData();
-                        ClusterConnectionManager.getInstance().getActiveClusters()
-                                .forEach(c -> SendEvent.sendJSON(
-                                        "PATREON",
-                                        c.getClusterId(),
-                                        jsonObject
-                                ));
-                    });
-        }
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        CompletableFuture.supplyAsync(() -> PatreonCache.getInstance().fetch())
+                .thenAccept(patreonMap -> {
+                    JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
+                    ClusterConnectionManager.getActiveClusters()
+                            .forEach(c -> SendEvent.sendJSON(
+                                    "PATREON",
+                                    c.getClusterId(),
+                                    jsonPremiumObject
+                            ));
+                });
         return null;
     }
 

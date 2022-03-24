@@ -47,7 +47,6 @@ public class Console {
         tasks.put("threads_stop", this::onThreadStop);
         tasks.put("backup", this::onBackup);
         tasks.put("start", this::onStart);
-        tasks.put("restart", this::onRestart);
         tasks.put("clusters", this::onClusters);
         tasks.put("shards", this::onShards);
         tasks.put("server", this::onServer);
@@ -102,7 +101,7 @@ public class Console {
             desc = content.length() > 0 ? String.format("Reason:```%s```", collectArgs(args, 3)) : null;
         }
 
-        ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
+        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
             SendEvent.sendUserNotification(
                     cluster.getClusterId(),
                     entryData.getUserId(),
@@ -131,14 +130,14 @@ public class Console {
         if (clusterId >= 1) {
             SendEvent.sendCmd(clusterId, inputBuilder.toString());
         } else {
-            ClusterConnectionManager.getInstance().getActiveClusters()
+            ClusterConnectionManager.getActiveClusters()
                     .forEach(c -> SendEvent.sendCmd(c.getClusterId(), inputBuilder.toString()));
         }
     }
 
     private void onConnect(String[] args) {
         int clusterId = Integer.parseInt(args[1]);
-        Cluster cluster = ClusterConnectionManager.getInstance().getCluster(clusterId);
+        Cluster cluster = ClusterConnectionManager.getCluster(clusterId);
 
         if (args.length >= 4) {
             int shardMin = Integer.parseInt(args[2]);
@@ -146,7 +145,7 @@ public class Console {
             cluster.setShardInterval(new int[] { shardMin, shardMax });
         }
 
-        ClusterConnectionManager.getInstance().submitConnectCluster(cluster, true, false);
+        ClusterConnectionManager.submitConnectCluster(cluster, true, false);
     }
 
     private void onRatelimit(String[] args) {
@@ -157,13 +156,13 @@ public class Console {
 
     private void onServer(String[] args) {
         long serverId = Long.parseLong(args[1]);
-        int cluster = ClusterConnectionManager.getInstance().getResponsibleCluster(serverId).getClusterId();
-        int shard = ClusterConnectionManager.getInstance().getResponsibleShard(serverId);
+        int cluster = ClusterConnectionManager.getResponsibleCluster(serverId).getClusterId();
+        int shard = ClusterConnectionManager.getResponsibleShard(serverId);
         LOGGER.info("Server: {}; Cluster: {}; Shard: {}", serverId, cluster, shard);
     }
 
     private void onClusters(String[] args) {
-        ClusterConnectionManager.getInstance().getClusters().forEach(cluster -> {
+        ClusterConnectionManager.getClusters().forEach(cluster -> {
             LOGGER.info(
                     "Cluster {}: {} ({} servers, shard {} - {})",
                     cluster.getClusterId(),
@@ -176,15 +175,11 @@ public class Console {
     }
 
     private void onShards(String[] args) {
-        LOGGER.info("Total shards: {}", ClusterConnectionManager.getInstance().getTotalShards().orElse(0));
-    }
-
-    private void onRestart(String[] args) {
-        ClusterConnectionManager.getInstance().restart();
+        LOGGER.info("Total shards: {}", ClusterConnectionManager.getTotalShards().orElse(0));
     }
 
     private void onStart(String[] args) {
-        ClusterConnectionManager.getInstance().start();
+        ClusterConnectionManager.start();
     }
 
     private void onBackup(String[] args) {

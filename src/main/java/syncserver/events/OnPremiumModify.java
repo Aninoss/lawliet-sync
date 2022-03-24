@@ -10,34 +10,31 @@ import syncserver.*;
 public class OnPremiumModify implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject jsonObject) {
-        if (socketId.equals(ClientTypes.WEB)) {
-            boolean success = false;
-            long userId = jsonObject.getLong("user_id");
-            int i = jsonObject.getInt("slot");
-            long guildId = jsonObject.getLong("guild_id");
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        boolean success = false;
+        long userId = jsonObject.getLong("user_id");
+        int i = jsonObject.getInt("slot");
+        long guildId = jsonObject.getLong("guild_id");
 
-            if (DBPremium.canModify(userId, i)) {
-                success = true;
-                if (guildId != 0) {
-                    DBPremium.modify(userId, i, guildId);
-                } else {
-                    DBPremium.delete(userId, i);
-                }
-                DBPatreon.transferToNewSystem(userId);
-                broadcastPatreonData();
+        if (DBPremium.canModify(userId, i)) {
+            success = true;
+            if (guildId != 0) {
+                DBPremium.modify(userId, i, guildId);
+            } else {
+                DBPremium.delete(userId, i);
             }
-
-            JSONObject jsonResponse = new JSONObject();
-            jsonResponse.put("success", success);
-            return jsonResponse;
+            DBPatreon.transferToNewSystem(userId);
+            broadcastPatreonData();
         }
-        return null;
+
+        JSONObject jsonResponse = new JSONObject();
+        jsonResponse.put("success", success);
+        return jsonResponse;
     }
 
     private void broadcastPatreonData() {
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
-        ClusterConnectionManager.getInstance().getActiveClusters()
+        ClusterConnectionManager.getActiveClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",
                         c.getClusterId(),

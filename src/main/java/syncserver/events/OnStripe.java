@@ -21,13 +21,13 @@ public class OnStripe implements SyncServerFunction {
     private final static Logger LOGGER = LoggerFactory.getLogger(OnStripe.class);
 
     @Override
-    public JSONObject apply(String socketId, JSONObject dataJson) {
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
         LOGGER.info("New subscription received");
 
-        long userId = dataJson.getLong("user_id");
-        int subId = dataJson.has("sub_id") ? dataJson.getInt("sub_id") : 0;
+        long userId = jsonObject.getLong("user_id");
+        int subId = jsonObject.has("sub_id") ? jsonObject.getInt("sub_id") : 0;
         if (subId != 0) {
-            boolean unlocksServer = dataJson.getBoolean("unlocks_server");
+            boolean unlocksServer = jsonObject.getBoolean("unlocks_server");
             try {
                 DBPaddleSubscriptions.savePaddleSubscription(subId, userId, unlocksServer);
             } catch (SQLException | InterruptedException e) {
@@ -46,17 +46,17 @@ public class OnStripe implements SyncServerFunction {
             }
         }
 
-        JSONObject jsonObject = PremiumManager.retrieveJsonData();
-        ClusterConnectionManager.getInstance().getActiveClusters()
+        JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
+        ClusterConnectionManager.getActiveClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",
                         c.getClusterId(),
-                        jsonObject
+                        jsonPremiumObject
                 ));
 
-        String title = dataJson.getString("title");
-        String desc = dataJson.getString("desc");
-        ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster().ifPresent(cluster -> {
+        String title = jsonObject.getString("title");
+        String desc = jsonObject.getString("desc");
+        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
             SendEvent.sendUserNotification(
                     cluster.getClusterId(),
                     userId,

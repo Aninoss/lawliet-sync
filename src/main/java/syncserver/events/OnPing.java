@@ -7,7 +7,7 @@ import syncserver.*;
 public class OnPing implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject jsonObject) {
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
         JSONObject response = new JSONObject();
         response.put("ping", "pong");
         return response;

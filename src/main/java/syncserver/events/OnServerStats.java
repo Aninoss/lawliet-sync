@@ -3,7 +3,6 @@ package syncserver.events;
 import mysql.modules.botstats.DBBotStats;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import syncserver.ClientTypes;
 import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
@@ -12,24 +11,21 @@ import syncserver.SyncServerFunction;
 public class OnServerStats implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject dataJson) {
-        if (socketId.equals(ClientTypes.WEB)) {
-            JSONObject mainJSON = new JSONObject();
-            JSONArray arrayJSON = new JSONArray();
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        JSONObject mainJSON = new JSONObject();
+        JSONArray arrayJSON = new JSONArray();
 
-            DBBotStats.getMonthlyServerStats().forEach(slot -> {
-                JSONObject slotJson = new JSONObject();
-                slotJson.put("month", slot.getMonth());
-                slotJson.put("year", slot.getYear());
-                slotJson.put("value", slot.getServerCount());
-                arrayJSON.put(slotJson);
-            });
+        DBBotStats.getMonthlyServerStats().forEach(slot -> {
+            JSONObject slotJson = new JSONObject();
+            slotJson.put("month", slot.getMonth());
+            slotJson.put("year", slot.getYear());
+            slotJson.put("value", slot.getServerCount());
+            arrayJSON.put(slotJson);
+        });
 
-            mainJSON.put("data", arrayJSON);
-            mainJSON.put("servers", ClusterConnectionManager.getInstance().getGlobalServerSize().orElse(null));
-            return mainJSON;
-        }
-        return null;
+        mainJSON.put("data", arrayJSON);
+        mainJSON.put("servers", ClusterConnectionManager.getGlobalServerSize().orElse(null));
+        return mainJSON;
     }
 
 }

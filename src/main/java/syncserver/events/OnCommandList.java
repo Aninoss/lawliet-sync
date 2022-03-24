@@ -8,12 +8,9 @@ import syncserver.*;
 public class OnCommandList implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject jsonObject) {
-        if (socketId.equals(ClientTypes.WEB)) {
-            Optional<Cluster> clusterOpt = ClusterConnectionManager.getInstance().getFirstFullyConnectedCluster();
-            return clusterOpt.map(cluster -> SendEvent.sendEmpty("COMMAND_LIST", cluster.getClusterId()).join()).orElse(null);
-        }
-        return null;
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        Optional<Cluster> clusterOpt = ClusterConnectionManager.getFirstFullyConnectedCluster();
+        return clusterOpt.map(cluster -> SendEvent.sendEmpty("COMMAND_LIST", cluster.getClusterId()).join()).orElse(null);
     }
 
 }

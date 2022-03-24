@@ -7,8 +7,7 @@ import core.payments.stripe.StripeCache;
 import mysql.DBMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import syncserver.CheckOwnConnection;
-import syncserver.SyncManager;
+import syncserver.EventManager;
 
 public class Main {
 
@@ -23,8 +22,7 @@ public class Main {
             PaddleCache.startScheduler();
             StripeCache.startScheduler();
             PatreonCache.getInstance().fetch();
-            SyncManager.getInstance().start();
-            CheckOwnConnection.startScheduler();
+            EventManager.register();
         } catch (Throwable e) {
             LOGGER.error("Error on startup", e);
             System.exit(1);

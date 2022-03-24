@@ -9,10 +9,10 @@ import syncserver.SyncServerFunction;
 public class OnRequestServerName implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject jsonObject) {
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long serverId = jsonObject.getLong("server_id");
         JSONObject responseJson = new JSONObject();
-        ClusterConnectionManager.getInstance().getResponsibleCluster(serverId).fetchServerNameById(serverId)
+        ClusterConnectionManager.getResponsibleCluster(serverId).fetchServerNameById(serverId)
                 .ifPresent(name -> responseJson.put("name", name));
         return responseJson;
     }

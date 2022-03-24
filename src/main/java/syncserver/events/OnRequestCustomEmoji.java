@@ -9,11 +9,10 @@ import syncserver.SyncServerFunction;
 public class OnRequestCustomEmoji implements SyncServerFunction {
 
     @Override
-    public JSONObject apply(String socketId, JSONObject jsonObject) {
-        int clusterId = Integer.parseInt(socketId.split("_")[1]);
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long emojiId = jsonObject.getLong("emoji_id");
         JSONObject responseJson = new JSONObject();
-        ClusterConnectionManager.getInstance().getActiveClusters().forEach(cluster -> {
+        ClusterConnectionManager.getActiveClusters().forEach(cluster -> {
             if (cluster.getClusterId() != clusterId) {
                 cluster.fetchCustomEmojiTagById(emojiId).ifPresent(emojiTag -> responseJson.put("tag", emojiTag));
             }

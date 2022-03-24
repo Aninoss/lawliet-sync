@@ -14,19 +14,17 @@ public class OnTopGGAnicord implements SyncServerFunction {
     private final static Logger LOGGER = LoggerFactory.getLogger(OnTopGGAnicord.class);
 
     @Override
-    public JSONObject apply(String socketId, JSONObject dataJson) {
+    public JSONObject apply(int clusterId, JSONObject jsonObject) {
         JSONObject responseJson = new JSONObject();
         responseJson.put("success", false);
-        if (socketId.equals(ClientTypes.WEB)) {
-            LOGGER.info("UPVOTE ANINOSS | {}", dataJson.getLong("user"));
-            long guildId = dataJson.getLong("guild");
-            Cluster cluster = ClusterConnectionManager.getInstance().getResponsibleCluster(guildId);
-            try {
-                SendEvent.sendJSON("TOPGG_ANICORD", cluster.getClusterId(), dataJson).get(5, TimeUnit.SECONDS);
-                responseJson.put("success", true);
-            } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                LOGGER.error("Error", e);
-            }
+        LOGGER.info("UPVOTE ANINOSS | {}", jsonObject.getLong("user"));
+        long guildId = jsonObject.getLong("guild");
+        Cluster cluster = ClusterConnectionManager.getResponsibleCluster(guildId);
+        try {
+            SendEvent.sendJSON("TOPGG_ANICORD", cluster.getClusterId(), jsonObject).get(5, TimeUnit.SECONDS);
+            responseJson.put("success", true);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            LOGGER.error("Error", e);
         }
         return responseJson;
     }

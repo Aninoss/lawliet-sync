@@ -11,20 +11,20 @@ public class SendEvent {
     private SendEvent() {
     }
 
-    public static CompletableFuture<JSONObject> sendExit(long clusterId) {
-        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "EXIT", new JSONObject());
+    public static CompletableFuture<JSONObject> sendExit(int clusterId) {
+        return ClusterConnectionManager.getCluster(clusterId).send("EXIT", new JSONObject());
     }
 
-    public static CompletableFuture<JSONObject> sendStartConnection(long clusterId, int shardMin, int shardMax, int totalShards) {
+    public static CompletableFuture<JSONObject> sendStartConnection(int clusterId, int shardMin, int shardMax, int totalShards) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("shard_min", shardMin);
         dataJson.put("shard_max", shardMax);
         dataJson.put("total_shards", totalShards);
 
-        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "START_CONNECTION", dataJson);
+        return ClusterConnectionManager.getCluster(clusterId).send("START_CONNECTION", dataJson);
     }
 
-    public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(long clusterId, long emojiId) {
+    public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(int clusterId, long emojiId) {
         return process(
                 clusterId,
                 "CUSTOM_EMOJI",
@@ -33,7 +33,7 @@ public class SendEvent {
         );
     }
 
-    public static CompletableFuture<Optional<String>> sendRequestServerName(long clusterId, long serverId) {
+    public static CompletableFuture<Optional<String>> sendRequestServerName(int clusterId, long serverId) {
         return process(
                 clusterId,
                 "SERVER_NAME",
@@ -42,11 +42,11 @@ public class SendEvent {
         );
     }
 
-    public static CompletableFuture<JSONObject> sendUserNotification(long clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer) {
+    public static CompletableFuture<JSONObject> sendUserNotification(int clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer) {
         return sendUserNotification(clusterId, userId, title, description, author, thumbnail, image, footer, 0);
     }
 
-    public static CompletableFuture<JSONObject> sendUserNotification(long clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer, int delay) {
+    public static CompletableFuture<JSONObject> sendUserNotification(int clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer, int delay) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("user_id", userId)
                 .put("title", title)
@@ -57,45 +57,45 @@ public class SendEvent {
                 .put("footer", footer)
                 .put("delay", delay);
 
-        return SyncManager.getInstance().getServer().sendSecure(ClientTypes.CLUSTER + "_" + clusterId, "NOTIFY", dataJson);
+        return ClusterConnectionManager.getCluster(clusterId).send("NOTIFY", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendBlockShards(long clusterId, int totalShards, int shardsMin, int shardsMax) {
+    public static CompletableFuture<JSONObject> sendBlockShards(int clusterId, int totalShards, int shardsMin, int shardsMax) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("total_shards", totalShards);
         dataJson.put("shards_min", shardsMin);
         dataJson.put("shards_max", shardsMax);
-        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "BLOCK_SHARDS", dataJson);
+        return ClusterConnectionManager.getCluster(clusterId).send("BLOCK_SHARDS", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendCmd(long clusterId, String input) {
+    public static CompletableFuture<JSONObject> sendCmd(int clusterId, String input) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("input", input);
-        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "CMD", dataJson);
+        return ClusterConnectionManager.getCluster(clusterId).send("CMD", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendReport(long clusterId, String url, String text, int ipHash) {
+    public static CompletableFuture<JSONObject> sendReport(int clusterId, String url, String text, int ipHash) {
         JSONObject dataJson = new JSONObject();
         dataJson.put("url", url);
         dataJson.put("text", text);
         dataJson.put("ip_hash", ipHash);
-        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, "REPORT", dataJson);
+        return ClusterConnectionManager.getCluster(clusterId).send("REPORT", dataJson);
     }
 
-    public static CompletableFuture<JSONObject> sendEmpty(String event, long clusterId) {
-        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, new JSONObject());
+    public static CompletableFuture<JSONObject> sendEmpty(String event, int clusterId) {
+        return ClusterConnectionManager.getCluster(clusterId).send(event, new JSONObject());
     }
 
-    public static CompletableFuture<JSONObject> sendJSON(String event, long clusterId, JSONObject jsonObject) {
-        return SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, jsonObject);
+    public static CompletableFuture<JSONObject> sendJSON(String event, int clusterId, JSONObject jsonObject) {
+        return ClusterConnectionManager.getCluster(clusterId).send(event, jsonObject);
     }
 
-    private static <T> CompletableFuture<T> process(long clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
+    private static <T> CompletableFuture<T> process(int clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
         CompletableFuture<T> future = new CompletableFuture<>();
 
         JSONObject dataJson = new JSONObject();
         jsonMap.keySet().forEach(k -> dataJson.put(k, jsonMap.get(k)));
-        SyncManager.getInstance().getServer().send(ClientTypes.CLUSTER + "_" + clusterId, event, dataJson)
+        ClusterConnectionManager.getCluster(clusterId).send(event, dataJson)
                 .exceptionally(e -> {
                     future.completeExceptionally(e);
                     return null;

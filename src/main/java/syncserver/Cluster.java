@@ -1,19 +1,30 @@
 package syncserver;
 
+import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import okhttp3.*;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
 public class Cluster {
 
     public enum ConnectionStatus { OFFLINE, BOOTING_UP, FULLY_CONNECTED }
 
+    private static final OkHttpClient httpClient = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .build();
+
     private final int clusterId;
-    private final int size;
+    private final String ip;
     private ConnectionStatus connectionStatus = ConnectionStatus.OFFLINE;
     private int[] shardInterval = null;
     private Long localServerSize = null;
@@ -36,9 +47,9 @@ public class Cluster {
                 }
             });
 
-    public Cluster(int clusterId, int size) {
+    public Cluster(int clusterId, String ip) {
         this.clusterId = clusterId;
-        this.size = size;
+        this.ip = ip;
     }
 
     public void setConnectionStatus(ConnectionStatus connectionStatus) {
@@ -53,8 +64,8 @@ public class Cluster {
         return clusterId;
     }
 
-    public int getSize() {
-        return size;
+    public String getIp() {
+        return ip;
     }
 
     public ConnectionStatus getConnectionStatus() {
@@ -99,6 +110,35 @@ public class Cluster {
         } catch (ExecutionException e) {
             return Optional.empty();
         }
+    }
+
+    public CompletableFuture<JSONObject> send(String name, JSONObject requestJson) {
+        String url = "http://" + ip + ":" + System.getenv("SYNC_CLIENT_PORT") + "/api/" + name;
+        Request request = new Request.Builder()
+                .url(url)
+                .post(RequestBody.create(requestJson.toString(), MediaType.get("application/json")))
+                .addHeader("Authorization", System.getenv("SYNC_AUTH"))
+                .build();
+
+        CompletableFuture<JSONObject> future = new CompletableFuture<>();
+        httpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                future.completeExceptionally(e);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
+                try {
+                    JSONObject responseJson = new JSONObject(response.body().string());
+                    future.complete(responseJson);
+                } catch (Throwable e) {
+                    future.completeExceptionally(e);
+                }
+            }
+        });
+
+        return future;
     }
 
 }
