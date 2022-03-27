@@ -129,8 +129,8 @@ public class Cluster {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) {
-                try {
-                    JSONObject responseJson = new JSONObject(response.body().string());
+                try(ResponseBody responseBody = response.body()) {
+                    JSONObject responseJson = new JSONObject(responseBody.string());
                     future.complete(responseJson);
                 } catch (Throwable e) {
                     future.completeExceptionally(e);
