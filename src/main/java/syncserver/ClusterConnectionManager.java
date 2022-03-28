@@ -1,14 +1,9 @@
 package syncserver;
 
-import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalCause;
-import core.ExceptionLogger;
 import core.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,19 +16,25 @@ public class ClusterConnectionManager {
     private static final HashMap<Integer, Cluster> clusterMap = new HashMap<>();
     private static final ExecutorService connectorService = Executors.newSingleThreadExecutor();
     private static Integer totalShards = null;
-    private static final Cache<String, Integer> ipToClusterIdCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(Duration.ofSeconds(5))
-            .removalListener(event -> {
-                if (event.getCause() == RemovalCause.EXPIRED) {
-                    unregister((Integer) event.getValue());
-                }
-            })
-            .build();
+    private static final HashMap<Integer, Instant> clusterCache = new HashMap<>();
 
-    public static boolean heartbeat(String ip, int clusterId) {
-        boolean result = !ipToClusterIdCache.asMap().containsKey(ip);
-        ipToClusterIdCache.put(ip, clusterId);
-        return result;
+    static {
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            synchronized (clusterCache) {
+                for (int clusterId : clusterCache.keySet()) {
+                    if (clusterCache.get(clusterId).isBefore(Instant.now().minusSeconds(5))) {
+                        clusterCache.remove(clusterId);
+                        unregister(clusterId);
+                    }
+                }
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    public static boolean heartbeat(int clusterId) {
+        synchronized (clusterCache) {
+            return clusterCache.put(clusterId, Instant.now()) == null;
+        }
     }
 
     public static synchronized void clusterSetFullyConnected(int clusterId, int shardMin, int shardMax, int totalShards, String ip) {
@@ -126,8 +127,15 @@ public class ClusterConnectionManager {
             }
 
             cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
-            SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards)
-                    .exceptionally(ExceptionLogger.get());
+            while(true) {
+                try {
+                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards).get(1, TimeUnit.SECONDS);
+                    break;
+                } catch (ExecutionException | TimeoutException e) {
+                    LOGGER.error("Error while sending connection start signal", e);
+                    Thread.sleep(100);
+                }
+            }
 
             while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.BOOTING_UP) {
                 Thread.sleep(100);

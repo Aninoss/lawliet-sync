@@ -12,7 +12,7 @@ public class OnHeartbeat implements SyncServerFunction {
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         String ip = jsonObject.getString("ip");
         boolean alreadyConnected = jsonObject.getBoolean("already_connected");
-        if (ClusterConnectionManager.heartbeat(ip, clusterId)) {
+        if (ClusterConnectionManager.heartbeat(clusterId)) {
             if (alreadyConnected) {
                 ClusterConnectionManager.registerConnectedCluster(
                         clusterId,
