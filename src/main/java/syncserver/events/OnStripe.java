@@ -47,7 +47,7 @@ public class OnStripe implements SyncServerFunction {
         }
 
         JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
-        ClusterConnectionManager.getActiveClusters()
+        ClusterConnectionManager.getClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",
                         c.getClusterId(),

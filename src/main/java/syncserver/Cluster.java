@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import core.Program;
 import okhttp3.*;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +27,6 @@ public class Cluster {
     private final int clusterId;
     private final String ip;
     private ConnectionStatus connectionStatus = ConnectionStatus.OFFLINE;
-    private int[] shardInterval = null;
     private Long localServerSize = null;
 
     private final LoadingCache<Long, Optional<String>> emojiCache = CacheBuilder.newBuilder()
@@ -56,10 +56,6 @@ public class Cluster {
         this.connectionStatus = connectionStatus;
     }
 
-    public void setShardInterval(int[] shardInterval) {
-        this.shardInterval = shardInterval;
-    }
-
     public int getClusterId() {
         return clusterId;
     }
@@ -72,8 +68,20 @@ public class Cluster {
         return connectionStatus;
     }
 
-    public int[] getShardInterval() {
-        return shardInterval;
+    public int getShardIntervalMin() {
+        if (Program.isProductionMode()) {
+            return (clusterId - 1) * 16;
+        } else {
+            return 0;
+        }
+    }
+
+    public int getShardIntervalMax() {
+        if (Program.isProductionMode()) {
+            return (clusterId - 1) * 16 + 15;
+        } else {
+            return 0;
+        }
     }
 
     public Optional<Long> getLocalServerSize() {
@@ -82,10 +90,6 @@ public class Cluster {
 
     public void setLocalServerSize(Long localServerSize) {
         this.localServerSize = localServerSize;
-    }
-
-    public boolean isActive() {
-        return getShardInterval() != null;
     }
 
     public Optional<String> fetchCustomEmojiTagById(long emojiId) {
@@ -129,7 +133,7 @@ public class Cluster {
 
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) {
-                try(ResponseBody responseBody = response.body()) {
+                try (ResponseBody responseBody = response.body()) {
                     JSONObject responseJson = new JSONObject(responseBody.string());
                     future.complete(responseJson);
                 } catch (Throwable e) {

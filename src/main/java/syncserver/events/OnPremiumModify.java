@@ -34,7 +34,7 @@ public class OnPremiumModify implements SyncServerFunction {
 
     private void broadcastPatreonData() {
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
-        ClusterConnectionManager.getActiveClusters()
+        ClusterConnectionManager.getClusters()
                 .forEach(c -> SendEvent.sendJSON(
                         "PATREON",
                         c.getClusterId(),

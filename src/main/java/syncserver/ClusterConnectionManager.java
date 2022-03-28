@@ -41,7 +41,6 @@ public class ClusterConnectionManager {
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, ip));
         if (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             LOGGER.info("Cluster {} is fully connected", clusterId);
-            cluster.setShardInterval(new int[] { shardMin, shardMax });
             cluster.setConnectionStatus(Cluster.ConnectionStatus.FULLY_CONNECTED);
             if (ClusterConnectionManager.totalShards == null) {
                 ClusterConnectionManager.totalShards = totalShards;
@@ -78,27 +77,19 @@ public class ClusterConnectionManager {
         ClusterConnectionManager.totalShards = totalShards;
         LOGGER.info("Starting clusters with total shard size of {}", totalShards);
 
-        for (int i = 0; i < clusters.size(); i++) {
-            Cluster cluster = clusters.get(i);
-            if (Program.isProductionMode()) {
-                int shardMin = i * 16;
-                int shardMax = i * 16 + 15;
-                cluster.setShardInterval(new int[] { shardMin, shardMax });
-            } else {
-                cluster.setShardInterval(new int[] { 0, 0 });
-            }
-            LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1]);
+        for (Cluster cluster : clusters) {
+            LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardIntervalMin(), cluster.getShardIntervalMax());
             submitConnectCluster(cluster, true, true);
         }
     }
 
     public static void submitConnectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) {
-        if (cluster.isActive() && totalShards != null) {
+        if (totalShards != null) {
             connectorService.submit(() -> {
                 try {
                     connectCluster(cluster, allowReconnect, sendBlockShards);
                 } catch (InterruptedException e) {
-                    //Ignore
+                    //ignore
                 }
             });
         }
@@ -121,18 +112,18 @@ public class ClusterConnectionManager {
             LOGGER.info("Connecting cluster {}", cluster.getClusterId());
 
             if (sendBlockShards) {
-                ClusterConnectionManager.getActiveClusters().stream()
+                ClusterConnectionManager.getFullyConnectedClusters().stream()
                         .filter(c -> c.getClusterId() > cluster.getClusterId())
-                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardInterval()[0], cluster.getShardInterval()[1]));
+                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardIntervalMin(), cluster.getShardIntervalMax()));
             }
 
             cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
             while(true) {
                 try {
-                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardInterval()[0], cluster.getShardInterval()[1], totalShards).get(1, TimeUnit.SECONDS);
+                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardIntervalMin(), cluster.getShardIntervalMax(), totalShards).get(1, TimeUnit.SECONDS);
                     break;
                 } catch (ExecutionException | TimeoutException e) {
-                    LOGGER.error("Error while sending connection start signal", e);
+                    LOGGER.error("Cluster connection signal error, trying again...");
                     Thread.sleep(100);
                 }
             }
@@ -150,7 +141,7 @@ public class ClusterConnectionManager {
     public static Optional<Long> getGlobalServerSize() {
         long globalServerSize = 0;
         for (Cluster cluster : ClusterConnectionManager.getClusters()) {
-            if (cluster.isActive() || cluster.getLocalServerSize().isPresent()) {
+            if (cluster.getLocalServerSize().isPresent()) {
                 if (cluster.getLocalServerSize().isEmpty()) {
                     globalServerSize = 0;
                     break;
@@ -166,14 +157,14 @@ public class ClusterConnectionManager {
     }
 
     public static List<Cluster> getClusters() {
-        ArrayList<Cluster> clusters = new ArrayList<>(clusterMap.values());
-        clusters.sort(Comparator.comparingInt(Cluster::getClusterId));
-        return clusters;
+        return clusterMap.values().stream()
+                .sorted(Comparator.comparingInt(Cluster::getClusterId))
+                .collect(Collectors.toList());
     }
 
-    public static List<Cluster> getActiveClusters() {
+    public static List<Cluster> getFullyConnectedClusters() {
         return clusterMap.values().stream()
-                .filter(Cluster::isActive)
+                .filter(cluster -> cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED)
                 .sorted(Comparator.comparingInt(Cluster::getClusterId))
                 .collect(Collectors.toList());
     }
@@ -186,9 +177,8 @@ public class ClusterConnectionManager {
 
     public static Cluster getResponsibleCluster(long serverId) {
         int shard = getResponsibleShard(serverId);
-        for (Cluster cluster : getActiveClusters()) {
-            int[] shardInterval = cluster.getShardInterval();
-            if (shard >= shardInterval[0] && shard <= shardInterval[1]) {
+        for (Cluster cluster : getClusters()) {
+            if (shard >= cluster.getShardIntervalMin() && shard <= cluster.getShardIntervalMax()) {
                 return cluster;
             }
         }

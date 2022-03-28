@@ -14,7 +14,7 @@ public class OnPatreonFetch implements SyncServerFunction {
         CompletableFuture.supplyAsync(() -> PatreonCache.getInstance().fetch())
                 .thenAccept(patreonMap -> {
                     JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
-                    ClusterConnectionManager.getActiveClusters()
+                    ClusterConnectionManager.getClusters()
                             .forEach(c -> SendEvent.sendJSON(
                                     "PATREON",
                                     c.getClusterId(),

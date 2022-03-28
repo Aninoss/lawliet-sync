@@ -15,7 +15,7 @@ public class OnCmd implements SyncServerFunction {
             SendEvent.sendCmd(toClusterId, command)
                     .exceptionally(ExceptionLogger.get());
         } else {
-            ClusterConnectionManager.getActiveClusters()
+            ClusterConnectionManager.getClusters()
                     .forEach(c -> SendEvent.sendCmd(c.getClusterId(), command).exceptionally(ExceptionLogger.get()));
         }
         return null;

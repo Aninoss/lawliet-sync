@@ -130,7 +130,7 @@ public class Console {
         if (clusterId >= 1) {
             SendEvent.sendCmd(clusterId, inputBuilder.toString());
         } else {
-            ClusterConnectionManager.getActiveClusters()
+            ClusterConnectionManager.getClusters()
                     .forEach(c -> SendEvent.sendCmd(c.getClusterId(), inputBuilder.toString()));
         }
     }
@@ -138,13 +138,6 @@ public class Console {
     private void onConnect(String[] args) {
         int clusterId = Integer.parseInt(args[1]);
         Cluster cluster = ClusterConnectionManager.getCluster(clusterId);
-
-        if (args.length >= 4) {
-            int shardMin = Integer.parseInt(args[2]);
-            int shardMax = Integer.parseInt(args[3]);
-            cluster.setShardInterval(new int[] { shardMin, shardMax });
-        }
-
         ClusterConnectionManager.submitConnectCluster(cluster, true, false);
     }
 
@@ -168,8 +161,8 @@ public class Console {
                     cluster.getClusterId(),
                     cluster.getConnectionStatus().toString(),
                     cluster.getLocalServerSize().orElse(0L),
-                    cluster.getShardInterval() != null ? cluster.getShardInterval()[0] : -1,
-                    cluster.getShardInterval() != null ? cluster.getShardInterval()[1] : -1
+                    cluster.getShardIntervalMin(),
+                    cluster.getShardIntervalMax()
             );
         });
     }
