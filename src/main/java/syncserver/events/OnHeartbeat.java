@@ -1,6 +1,7 @@
 package syncserver.events;
 
 import org.json.JSONObject;
+import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
@@ -33,6 +34,8 @@ public class OnHeartbeat implements SyncServerFunction {
                         jsonObject.getInt("total_shards"),
                         ip
                 );
+            } else if (ClusterConnectionManager.getCluster(clusterId).getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED) {
+                ClusterConnectionManager.registerUnconnectedCluster(clusterId, ip);
             }
         }
         return null;
