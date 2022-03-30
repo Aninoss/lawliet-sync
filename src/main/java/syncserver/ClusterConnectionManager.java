@@ -20,24 +20,20 @@ public class ClusterConnectionManager {
 
     static {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            synchronized (clusterCache) {
-                for (int clusterId : clusterCache.keySet()) {
-                    if (clusterCache.get(clusterId).isBefore(Instant.now().minusSeconds(5))) {
-                        clusterCache.remove(clusterId);
-                        unregister(clusterId);
-                    }
+            for (int clusterId : new ArrayList<>(clusterCache.keySet())) {
+                if (clusterCache.get(clusterId).isBefore(Instant.now().minusSeconds(5))) {
+                    clusterCache.remove(clusterId);
+                    unregister(clusterId);
                 }
             }
         }, 1, 1, TimeUnit.SECONDS);
     }
 
     public static boolean heartbeat(int clusterId) {
-        synchronized (clusterCache) {
-            return clusterCache.put(clusterId, Instant.now()) == null;
-        }
+        return clusterCache.put(clusterId, Instant.now()) == null;
     }
 
-    public static synchronized void clusterSetFullyConnected(int clusterId, int shardMin, int shardMax, int totalShards, String ip) {
+    public static synchronized void clusterSetFullyConnected(int clusterId, int totalShards, String ip) {
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, ip));
         if (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             LOGGER.info("Cluster {} is fully connected", clusterId);
@@ -55,9 +51,9 @@ public class ClusterConnectionManager {
         submitConnectCluster(cluster, false, false);
     }
 
-    public static synchronized void registerConnectedCluster(int clusterId, int shardMin, int shardMax, int totalShards, String ip) {
+    public static synchronized void registerConnectedCluster(int clusterId, int totalShards, String ip) {
         LOGGER.info("Adding connected cluster with id: {}, alreadyPresent: {}", clusterId, clusterMap.containsKey(clusterId));
-        clusterSetFullyConnected(clusterId, shardMin, shardMax, totalShards, ip);
+        clusterSetFullyConnected(clusterId, totalShards, ip);
     }
 
     public static void unregister(int clusterId) {

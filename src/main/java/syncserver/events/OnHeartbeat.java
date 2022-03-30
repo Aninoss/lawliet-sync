@@ -17,8 +17,6 @@ public class OnHeartbeat implements SyncServerFunction {
             if (alreadyConnected) {
                 ClusterConnectionManager.registerConnectedCluster(
                         clusterId,
-                        jsonObject.getInt("shard_min"),
-                        jsonObject.getInt("shard_max"),
                         jsonObject.getInt("total_shards"),
                         ip
                 );
@@ -29,8 +27,6 @@ public class OnHeartbeat implements SyncServerFunction {
             if (alreadyConnected) {
                 ClusterConnectionManager.clusterSetFullyConnected(
                         clusterId,
-                        jsonObject.getInt("shard_min"),
-                        jsonObject.getInt("shard_max"),
                         jsonObject.getInt("total_shards"),
                         ip
                 );
