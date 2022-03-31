@@ -34,6 +34,12 @@ public class OnHeartbeat implements SyncServerFunction {
                 ClusterConnectionManager.registerUnconnectedCluster(clusterId, ip);
             }
         }
+
+        long totalServers;
+        if (jsonObject.has("total_servers") && (totalServers = jsonObject.getLong("total_servers")) > 0L) {
+            ClusterConnectionManager.getCluster(clusterId).setLocalServerSize(totalServers);
+        }
+
         return null;
     }
 
