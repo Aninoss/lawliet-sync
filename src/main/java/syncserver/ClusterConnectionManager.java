@@ -15,6 +15,7 @@ public class ClusterConnectionManager {
 
     private static final HashMap<Integer, Cluster> clusterMap = new HashMap<>();
     private static final ExecutorService connectorService = Executors.newSingleThreadExecutor();
+    private static final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
     private static Integer totalShards = null;
     private static final HashMap<Integer, Instant> clusterCache = new HashMap<>();
 
@@ -88,6 +89,8 @@ public class ClusterConnectionManager {
                     //ignore
                 }
             });
+        } else {
+            scheduledExecutor.schedule(() -> submitConnectCluster(cluster, allowReconnect, sendBlockShards), 1, TimeUnit.SECONDS);
         }
     }
 
@@ -100,7 +103,6 @@ public class ClusterConnectionManager {
 
         while (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             Thread.sleep(100);
-
             while (cluster.getConnectionStatus() == Cluster.ConnectionStatus.OFFLINE) {
                 Thread.sleep(100);
             }
