@@ -50,7 +50,7 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
         if (Program.isProductionMode()) {
             try {
                 HashMap<Long, Integer> userTiers = new HashMap<>();
-                fetchFromUrl("https://www.patreon.com/api/oauth2/v2/campaigns/3334056/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=full_name,patron_status,currently_entitled_amount_cents,pledge_cadence&fields%5Buser%5D=social_connections&page%5Bsize%5D=9999", userTiers);
+                fetchFromUrl("https://www.patreon.com/api/oauth2/v2/campaigns/3334056/members?include=user,currently_entitled_tiers&fields%5Bmember%5D=full_name,patron_status,currently_entitled_amount_cents,pledge_cadence&fields%5Buser%5D=social_connections&page%5Bsize%5D=999", userTiers);
                 LOGGER.info("Patreon update completed with {} users", userTiers.size());
 
                 return userTiers;

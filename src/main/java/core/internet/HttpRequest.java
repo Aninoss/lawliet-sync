@@ -51,8 +51,8 @@ public class HttpRequest {
             String line;
             StringBuilder text = new StringBuilder();
             HttpsURLConnection connection = (HttpsURLConnection) (new URL(urlString)).openConnection();
-            connection.setConnectTimeout(15000);
-            connection.setReadTimeout(15000);
+            connection.setConnectTimeout(30_000);
+            connection.setReadTimeout(30_000);
             Thread.sleep(pauseTimeMilis);
             connection.setRequestMethod(method);
 
