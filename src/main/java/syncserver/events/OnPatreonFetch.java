@@ -15,11 +15,7 @@ public class OnPatreonFetch implements SyncServerFunction {
                 .thenAccept(patreonMap -> {
                     JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
                     ClusterConnectionManager.getClusters()
-                            .forEach(c -> SendEvent.sendJSON(
-                                    "PATREON",
-                                    c.getClusterId(),
-                                    jsonPremiumObject
-                            ));
+                            .forEach(c -> c.send("PATREON", jsonPremiumObject));
                 });
         return null;
     }

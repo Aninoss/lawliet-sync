@@ -1,6 +1,7 @@
 package syncserver;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -116,8 +117,18 @@ public class Cluster {
         }
     }
 
-    public CompletableFuture<JSONObject> send(String name, JSONObject requestJson) {
-        String url = "http://" + ip + ":" + System.getenv("SYNC_CLIENT_PORT") + "/api/" + name;
+    public CompletableFuture<JSONObject> send(String event) {
+        return send(event, new JSONObject());
+    }
+
+    public CompletableFuture<JSONObject> send(String event, Map<String, Object> requestMap) {
+        JSONObject requestJson = new JSONObject();
+        requestMap.forEach(requestJson::put);
+        return send(event, requestJson);
+    }
+
+    public CompletableFuture<JSONObject> send(String event, JSONObject requestJson) {
+        String url = "http://" + ip + ":" + System.getenv("SYNC_CLIENT_PORT") + "/api/" + event;
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(requestJson.toString(), MediaType.get("application/json")))

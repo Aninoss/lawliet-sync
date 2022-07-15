@@ -10,7 +10,7 @@ public class OnDashboardListDiscordEntities implements SyncServerFunction {
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long guildId = jsonObject.getLong("guild_id");
         Cluster cluster = ClusterConnectionManager.getResponsibleCluster(guildId);
-        return SendEvent.sendJSON("DASH_LIST_DISCORD_ENTITIES", cluster.getClusterId(), jsonObject).join();
+        return cluster.send("DASH_LIST_DISCORD_ENTITIES", jsonObject).join();
     }
 
 }

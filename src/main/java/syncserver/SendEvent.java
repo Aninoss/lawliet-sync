@@ -3,13 +3,9 @@ package syncserver;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import org.json.JSONObject;
 
 public class SendEvent {
-
-    private SendEvent() {
-    }
 
     public static CompletableFuture<JSONObject> sendExit(int clusterId) {
         return ClusterConnectionManager.getCluster(clusterId).send("EXIT", new JSONObject());
@@ -25,21 +21,13 @@ public class SendEvent {
     }
 
     public static CompletableFuture<Optional<String>> sendRequestCustomEmoji(int clusterId, long emojiId) {
-        return process(
-                clusterId,
-                "CUSTOM_EMOJI",
-                Map.of("emoji_id", emojiId),
-                responseJson -> responseJson.has("tag") ? Optional.of(responseJson.getString("tag")) : Optional.empty()
-        );
+        return ClusterConnectionManager.getCluster(clusterId).send("CUSTOM_EMOJI", Map.of("emoji_id", emojiId))
+                .thenApply(responseJson -> responseJson.has("tag") ? Optional.of(responseJson.getString("tag")) : Optional.empty());
     }
 
     public static CompletableFuture<Optional<String>> sendRequestServerName(int clusterId, long serverId) {
-        return process(
-                clusterId,
-                "SERVER_NAME",
-                Map.of("server_id", serverId),
-                responseJson -> responseJson.has("name") ? Optional.of(responseJson.getString("name")) : Optional.empty()
-        );
+        return ClusterConnectionManager.getCluster(clusterId).send("SERVER_NAME", Map.of("server_id", serverId))
+                .thenApply(responseJson -> responseJson.has("name") ? Optional.of(responseJson.getString("name")) : Optional.empty());
     }
 
     public static CompletableFuture<JSONObject> sendUserNotification(int clusterId, long userId, String title, String description, String author, String thumbnail, String image, String footer) {
@@ -80,32 +68,6 @@ public class SendEvent {
         dataJson.put("text", text);
         dataJson.put("ip_hash", ipHash);
         return ClusterConnectionManager.getCluster(clusterId).send("REPORT", dataJson);
-    }
-
-    public static CompletableFuture<JSONObject> sendEmpty(String event, int clusterId) {
-        return ClusterConnectionManager.getCluster(clusterId).send(event, new JSONObject());
-    }
-
-    public static CompletableFuture<JSONObject> sendJSON(String event, int clusterId, JSONObject jsonObject) {
-        return ClusterConnectionManager.getCluster(clusterId).send(event, jsonObject);
-    }
-
-    private static <T> CompletableFuture<T> process(int clusterId, String event, Map<String, Object> jsonMap, Function<JSONObject, T> function) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-
-        JSONObject dataJson = new JSONObject();
-        jsonMap.keySet().forEach(k -> dataJson.put(k, jsonMap.get(k)));
-        ClusterConnectionManager.getCluster(clusterId).send(event, dataJson)
-                .exceptionally(e -> {
-                    future.completeExceptionally(e);
-                    return null;
-                })
-                .thenAccept(jsonResponse -> {
-                    T t = function.apply(jsonResponse);
-                    future.complete(t);
-                });
-
-        return future;
     }
 
 }

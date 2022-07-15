@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Subscription;
 import com.stripe.param.SubscriptionListParams;
+import core.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +32,18 @@ public class StripeCache {
     }
 
     public static void reload() throws StripeException {
-        ArrayList<Subscription> subscriptionList = new ArrayList<>();
-        Iterable<Subscription> subscriptionIterable = Subscription.list(SubscriptionListParams.builder()
-                .setStatus(SubscriptionListParams.Status.ACTIVE)
-                .setLimit(100L)
-                .build()
-        ).autoPagingIterable();
-        subscriptionIterable.forEach(subscriptionList::add);
-        subscriptions = Collections.unmodifiableList(subscriptionList);
+        if (Program.isProductionMode()) {
+            ArrayList<Subscription> subscriptionList = new ArrayList<>();
+            Iterable<Subscription> subscriptionIterable = Subscription.list(SubscriptionListParams.builder()
+                    .setStatus(SubscriptionListParams.Status.ACTIVE)
+                    .setLimit(100L)
+                    .build()
+            ).autoPagingIterable();
+            subscriptionIterable.forEach(subscriptionList::add);
+            subscriptions = Collections.unmodifiableList(subscriptionList);
+        } else {
+            subscriptions = Collections.emptyList();
+        }
 
         LOGGER.info("Stripe load successful ({})", subscriptions.size());
     }

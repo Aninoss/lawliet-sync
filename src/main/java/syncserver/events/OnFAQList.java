@@ -10,7 +10,7 @@ public class OnFAQList implements SyncServerFunction {
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         Optional<Cluster> clusterOpt = ClusterConnectionManager.getFirstFullyConnectedCluster();
-        return clusterOpt.map(cluster -> SendEvent.sendEmpty("FAQ_LIST", cluster.getClusterId()).join()).orElse(null);
+        return clusterOpt.map(cluster -> cluster.send("FAQ_LIST").join()).orElse(null);
     }
 
 }

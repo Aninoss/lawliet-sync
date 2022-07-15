@@ -10,10 +10,7 @@ import mysql.modules.paddlesubscriptions.DBPaddleSubscriptions;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import syncserver.ClusterConnectionManager;
-import syncserver.SendEvent;
-import syncserver.SyncServerEvent;
-import syncserver.SyncServerFunction;
+import syncserver.*;
 
 @SyncServerEvent(event = "STRIPE")
 public class OnStripe implements SyncServerFunction {
@@ -48,11 +45,7 @@ public class OnStripe implements SyncServerFunction {
 
         JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getClusters()
-                .forEach(c -> SendEvent.sendJSON(
-                        "PATREON",
-                        c.getClusterId(),
-                        jsonPremiumObject
-                ));
+                .forEach(c -> c.send("PATREON", jsonPremiumObject));
 
         String title = jsonObject.getString("title");
         String desc = jsonObject.getString("desc");

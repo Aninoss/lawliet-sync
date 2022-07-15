@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import syncserver.SendEvent;
+import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 
@@ -21,7 +21,8 @@ public class OnTopGG implements SyncServerFunction {
         responseJson.put("success", false);
         LOGGER.info("UPVOTE | {}", jsonObject.getLong("user"));
         try {
-            SendEvent.sendJSON("TOPGG", 1, jsonObject).get(5, TimeUnit.SECONDS);
+            ClusterConnectionManager.getCluster(1)
+                    .send("TOPGG", jsonObject).get(5, TimeUnit.SECONDS);
             responseJson.put("success", true);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             LOGGER.error("Error", e);
