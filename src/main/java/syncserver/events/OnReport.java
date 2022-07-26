@@ -19,7 +19,11 @@ public class OnReport implements SyncServerFunction {
                     !jedis.hexists("reports_banned", String.valueOf(ipHash))
             ) {
                 Cluster cluster = ClusterConnectionManager.getResponsibleCluster(557953262305804308L);
-                SendEvent.sendReport(cluster.getClusterId(), url, text, ipHash).join();
+                JSONObject dataJson = new JSONObject();
+                dataJson.put("url", url);
+                dataJson.put("text", text);
+                dataJson.put("ip_hash", ipHash);
+                cluster.send(EventOut.REPORT, dataJson).join();
                 jedis.hset("reports", url, Instant.now().toString());
             }
         });

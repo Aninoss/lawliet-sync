@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import core.ExceptionLogger;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import org.json.JSONObject;
 import syncserver.*;
@@ -18,8 +19,8 @@ public class OnFRPost implements SyncServerFunction {
 
         DBFeatureRequests.postFeatureRequest(id, userId, title, desc);
         ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
-            SendEvent.sendUserNotification(
-                    cluster.getClusterId(),
+            SyncUtil.sendUserNotification(
+                    cluster,
                     ClusterConnectionManager.OWNER_ID,
                     title == null || title.isEmpty() ? "Empty Title" : title,
                     desc,
@@ -27,7 +28,7 @@ public class OnFRPost implements SyncServerFunction {
                     null,
                     null,
                     String.valueOf(userId)
-            );
+            ).exceptionally(ExceptionLogger.get());
         });
 
         return new JSONObject();

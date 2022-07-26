@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import core.ExceptionLogger;
 import core.payments.PremiumManager;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.premium.DBPremium;
@@ -35,7 +36,7 @@ public class OnPremiumModify implements SyncServerFunction {
     private void broadcastPatreonData() {
         JSONObject jsonObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getClusters()
-                .forEach(c -> c.send("PATREON", jsonObject));
+                .forEach(c -> c.send(EventOut.PATREON, jsonObject).exceptionally(ExceptionLogger.get()));
     }
 
 }

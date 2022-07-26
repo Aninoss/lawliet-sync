@@ -1,0 +1,24 @@
+package syncserver;
+
+public enum EventOut {
+
+    EXIT,
+    START_CONNECTION,
+    CUSTOM_EMOJI,
+    SERVER_NAME,
+    NOTIFY,
+    BLOCK_SHARDS,
+    CMD,
+    REPORT,
+    PATREON,
+    COMMAND_LIST,
+    DASH_ACTION,
+    DASH_CAT_INIT,
+    DASH_COUNT_DISCORD_ENTITIES,
+    DASH_INIT,
+    DASH_LIST_DISCORD_ENTITIES,
+    FAQ_LIST,
+    TOPGG,
+    TOPGG_ANICORD
+
+}

@@ -18,7 +18,7 @@ public class OnDashboardInit implements SyncServerFunction {
         long guildId = jsonObject.getLong("guild_id");
         Cluster cluster = ClusterConnectionManager.getResponsibleCluster(guildId);
         try {
-            return cluster.send("DASH_INIT", jsonObject).get(3, TimeUnit.SECONDS);
+            return cluster.send(EventOut.DASH_INIT, jsonObject).get(3, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             LOGGER.error("Error", e);
         }

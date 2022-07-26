@@ -10,7 +10,7 @@ public class OnCommandList implements SyncServerFunction {
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         Optional<Cluster> clusterOpt = ClusterConnectionManager.getFirstFullyConnectedCluster();
-        return clusterOpt.map(cluster -> cluster.send("COMMAND_LIST").join()).orElse(null);
+        return clusterOpt.map(cluster -> cluster.send(EventOut.COMMAND_LIST).join()).orElse(null);
     }
 
 }

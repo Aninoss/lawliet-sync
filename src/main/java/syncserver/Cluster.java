@@ -35,7 +35,10 @@ public class Cluster {
             .build(new CacheLoader<>() {
                 @Override
                 public Optional<String> load(@NonNull Long emojiId) throws Exception {
-                    return SendEvent.sendRequestCustomEmoji(clusterId, emojiId).get();
+                    return ClusterConnectionManager.getCluster(clusterId)
+                            .send(EventOut.CUSTOM_EMOJI, Map.of("emoji_id", emojiId))
+                            .thenApply(responseJson -> responseJson.has("tag") ? Optional.of(responseJson.getString("tag")) : Optional.ofNullable((String) null))
+                            .get();
                 }
             });
 
@@ -44,7 +47,10 @@ public class Cluster {
             .build(new CacheLoader<>() {
                 @Override
                 public Optional<String> load(@NonNull Long serverId) throws Exception {
-                    return SendEvent.sendRequestServerName(clusterId, serverId).get();
+                    return ClusterConnectionManager.getCluster(clusterId)
+                            .send(EventOut.SERVER_NAME, Map.of("server_id", serverId))
+                            .thenApply(responseJson -> responseJson.has("name") ? Optional.of(responseJson.getString("name")) : Optional.ofNullable((String) null))
+                            .get();
                 }
             });
 
@@ -117,18 +123,22 @@ public class Cluster {
         }
     }
 
-    public CompletableFuture<JSONObject> send(String event) {
-        return send(event, new JSONObject());
+    public CompletableFuture<JSONObject> send(EventOut eventOut) {
+        return send(eventOut, new JSONObject());
     }
 
-    public CompletableFuture<JSONObject> send(String event, Map<String, Object> requestMap) {
+    public CompletableFuture<JSONObject> send(EventOut eventOut, Map<String, Object> requestMap) {
         JSONObject requestJson = new JSONObject();
         requestMap.forEach(requestJson::put);
-        return send(event, requestJson);
+        return send(eventOut, requestJson);
     }
 
-    public CompletableFuture<JSONObject> send(String event, JSONObject requestJson) {
-        String url = "http://" + ip + ":" + System.getenv("SYNC_CLIENT_PORT") + "/api/" + event;
+    public CompletableFuture<JSONObject> send(EventOut eventOut, JSONObject requestJson) {
+        return send(eventOut.name(), requestJson);
+    }
+
+    public CompletableFuture<JSONObject> send(String eventOut, JSONObject requestJson) {
+        String url = "http://" + ip + ":" + System.getenv("SYNC_CLIENT_PORT") + "/api/" + eventOut;
         Request request = new Request.Builder()
                 .url(url)
                 .post(RequestBody.create(requestJson.toString(), MediaType.get("application/json")))

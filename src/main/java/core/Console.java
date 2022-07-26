@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
-import syncserver.SendEvent;
+import syncserver.SyncUtil;
 
 public class Console {
 
@@ -102,8 +102,8 @@ public class Console {
         }
 
         ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
-            SendEvent.sendUserNotification(
-                    cluster.getClusterId(),
+            SyncUtil.sendUserNotification(
+                    cluster,
                     entryData.getUserId(),
                     title,
                     desc,
@@ -111,7 +111,7 @@ public class Console {
                     null,
                     null,
                     null
-            );
+            ).exceptionally(ExceptionLogger.get());
         });
 
         LOGGER.info("Feature Request Update Successful");
@@ -128,10 +128,11 @@ public class Console {
         }
 
         if (clusterId >= 1) {
-            SendEvent.sendCmd(clusterId, inputBuilder.toString());
+            SyncUtil.sendCmd(ClusterConnectionManager.getCluster(clusterId), inputBuilder.toString())
+                    .exceptionally(ExceptionLogger.get());
         } else {
             ClusterConnectionManager.getClusters()
-                    .forEach(c -> SendEvent.sendCmd(c.getClusterId(), inputBuilder.toString()));
+                    .forEach(c -> SyncUtil.sendCmd(c, inputBuilder.toString()).exceptionally(ExceptionLogger.get()));
         }
     }
 

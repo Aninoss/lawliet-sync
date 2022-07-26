@@ -15,14 +15,27 @@ import syncserver.SyncServerFunction;
 @SyncServerEvent(event = "FORWARD")
 public class OnForward implements SyncServerFunction {
 
+    private final static int TIMEOUT_SECONDS = 4;
     private final static Logger LOGGER = LoggerFactory.getLogger(OnForward.class);
 
-    private enum ForwardType { ALL_CLUSTERS, ANY_CLUSTER, FIRST_CLUSTER, SERVER_CLUSTER }
+    private enum ForwardType { ALL_CLUSTERS, ANY_CLUSTER, SPECIFIC_CLUSTER, SERVER_CLUSTER }
 
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         ForwardType forwardType = ForwardType.valueOf(jsonObject.getString("forward_type"));
         String event = jsonObject.getString("event");
+
+        int forwardToClusterId = 1;
+        if (jsonObject.has("cluster_id")) {
+            forwardToClusterId = jsonObject.getInt("cluster_id");
+        }
+        long guildId = 0L;
+        if (jsonObject.has("guild_id")) {
+            guildId = jsonObject.getLong("guild_id");
+        }
+        if (jsonObject.has("server_id")) {
+            guildId = jsonObject.getLong("server_id");
+        }
 
         try {
             return switch (forwardType) {
@@ -33,14 +46,16 @@ public class OnForward implements SyncServerFunction {
                     yield null;
                 }
                 case ANY_CLUSTER -> ClusterConnectionManager.getFirstFullyConnectedCluster().get()
-                        .send(event, jsonObject).get(3, TimeUnit.SECONDS);
-                case FIRST_CLUSTER -> ClusterConnectionManager.getCluster(1)
-                        .send(event, jsonObject).get(3, TimeUnit.SECONDS);
-                case SERVER_CLUSTER -> ClusterConnectionManager.getResponsibleCluster(jsonObject.getLong("guild_id"))
-                        .send(event, jsonObject).get(3, TimeUnit.SECONDS);
+                        .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                case SPECIFIC_CLUSTER -> ClusterConnectionManager.getCluster(forwardToClusterId)
+                        .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                case SERVER_CLUSTER -> ClusterConnectionManager.getResponsibleCluster(guildId)
+                        .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
             };
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            LOGGER.error("Error", e);
+        } catch (InterruptedException e) {
+            LOGGER.error("Request {} interrupted", event);
+        } catch (ExecutionException | TimeoutException e) {
+            LOGGER.error("Request {} error", event, e);
         }
 
         return null;

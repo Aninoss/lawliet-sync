@@ -12,11 +12,11 @@ public class OnCmd implements SyncServerFunction {
         int toClusterId = jsonObject.getInt("cluster_id");
         String command = jsonObject.getString("command");
         if (toClusterId >= 1) {
-            SendEvent.sendCmd(toClusterId, command)
+            SyncUtil.sendCmd(ClusterConnectionManager.getCluster(toClusterId), command)
                     .exceptionally(ExceptionLogger.get());
         } else {
             ClusterConnectionManager.getClusters()
-                    .forEach(c -> SendEvent.sendCmd(c.getClusterId(), command).exceptionally(ExceptionLogger.get()));
+                    .forEach(c -> SyncUtil.sendCmd(c, command).exceptionally(ExceptionLogger.get()));
         }
         return null;
     }

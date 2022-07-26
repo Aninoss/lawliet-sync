@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import core.ExceptionLogger;
 import core.Program;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +100,7 @@ public class ClusterConnectionManager {
         if (allowReconnect && cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED) {
             LOGGER.info("Disconnecting cluster {}", cluster.getClusterId());
             cluster.setConnectionStatus(Cluster.ConnectionStatus.OFFLINE);
-            SendEvent.sendExit(cluster.getClusterId());
+            cluster.send(EventOut.EXIT).exceptionally(ExceptionLogger.get());
         }
 
         while (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
@@ -112,13 +114,23 @@ public class ClusterConnectionManager {
             if (sendBlockShards) {
                 ClusterConnectionManager.getFullyConnectedClusters().stream()
                         .filter(c -> c.getClusterId() > cluster.getClusterId())
-                        .forEach(c -> SendEvent.sendBlockShards(c.getClusterId(), totalShards, cluster.getShardIntervalMin(), cluster.getShardIntervalMax()));
+                        .forEach(c -> {
+                            JSONObject dataJson = new JSONObject();
+                            dataJson.put("total_shards", totalShards);
+                            dataJson.put("shards_min", cluster.getShardIntervalMin());
+                            dataJson.put("shards_max", cluster.getShardIntervalMax());
+                            c.send(EventOut.BLOCK_SHARDS, dataJson).exceptionally(ExceptionLogger.get());
+                        });
             }
 
             cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
             while(true) {
                 try {
-                    SendEvent.sendStartConnection(cluster.getClusterId(), cluster.getShardIntervalMin(), cluster.getShardIntervalMax(), totalShards).get(1, TimeUnit.SECONDS);
+                    JSONObject dataJson = new JSONObject();
+                    dataJson.put("shard_min", cluster.getShardIntervalMin());
+                    dataJson.put("shard_max", cluster.getShardIntervalMax());
+                    dataJson.put("total_shards", totalShards);
+                    cluster.send(EventOut.START_CONNECTION, dataJson).get(1, TimeUnit.SECONDS);
                     break;
                 } catch (ExecutionException | TimeoutException e) {
                     LOGGER.error("Cluster connection signal error, trying again...");

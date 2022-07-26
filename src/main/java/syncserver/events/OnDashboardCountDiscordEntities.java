@@ -10,7 +10,7 @@ public class OnDashboardCountDiscordEntities implements SyncServerFunction {
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long guildId = jsonObject.getLong("guild_id");
         Cluster cluster = ClusterConnectionManager.getResponsibleCluster(guildId);
-        return cluster.send("DASH_COUNT_DISCORD_ENTITIES", jsonObject).join();
+        return cluster.send(EventOut.DASH_COUNT_DISCORD_ENTITIES, jsonObject).join();
     }
 
 }

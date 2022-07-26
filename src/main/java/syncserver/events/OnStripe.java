@@ -3,6 +3,7 @@ package syncserver.events;
 import java.io.IOException;
 import java.sql.SQLException;
 import com.stripe.exception.StripeException;
+import core.ExceptionLogger;
 import core.payments.PremiumManager;
 import core.payments.paddle.PaddleCache;
 import core.payments.stripe.StripeCache;
@@ -45,13 +46,13 @@ public class OnStripe implements SyncServerFunction {
 
         JSONObject jsonPremiumObject = PremiumManager.retrieveJsonData();
         ClusterConnectionManager.getClusters()
-                .forEach(c -> c.send("PATREON", jsonPremiumObject));
+                .forEach(c -> c.send(EventOut.PATREON, jsonPremiumObject).exceptionally(ExceptionLogger.get()));
 
         String title = jsonObject.getString("title");
         String desc = jsonObject.getString("desc");
         ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
-            SendEvent.sendUserNotification(
-                    cluster.getClusterId(),
+            SyncUtil.sendUserNotification(
+                    cluster,
                     userId,
                     title,
                     desc,
@@ -60,7 +61,7 @@ public class OnStripe implements SyncServerFunction {
                     null,
                     null,
                     60_000
-            );
+            ).exceptionally(ExceptionLogger.get());
         });
 
         return null;
