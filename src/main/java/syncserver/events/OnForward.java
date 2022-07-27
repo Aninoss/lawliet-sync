@@ -18,24 +18,14 @@ public class OnForward implements SyncServerFunction {
     private final static int TIMEOUT_SECONDS = 4;
     private final static Logger LOGGER = LoggerFactory.getLogger(OnForward.class);
 
-    private enum ForwardType { ALL_CLUSTERS, ANY_CLUSTER, SPECIFIC_CLUSTER, SERVER_CLUSTER }
+    private enum ForwardType { ALL_CLUSTERS, ANY_CLUSTER, SPECIFIC_CLUSTER, SPECIFIC_GUILD }
 
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         ForwardType forwardType = ForwardType.valueOf(jsonObject.getString("forward_type"));
         String event = jsonObject.getString("event");
-
-        int forwardToClusterId = 1;
-        if (jsonObject.has("cluster_id")) {
-            forwardToClusterId = jsonObject.getInt("cluster_id");
-        }
-        long guildId = 0L;
-        if (jsonObject.has("guild_id")) {
-            guildId = jsonObject.getLong("guild_id");
-        }
-        if (jsonObject.has("server_id")) {
-            guildId = jsonObject.getLong("server_id");
-        }
+        int forwardToClusterId = jsonObject.has("cluster_id") ? jsonObject.getInt("cluster_id") : 1;
+        long guildId = jsonObject.has("guild_id") ? jsonObject.getLong("guild_id") : 0L;
 
         try {
             return switch (forwardType) {
@@ -49,7 +39,7 @@ public class OnForward implements SyncServerFunction {
                         .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 case SPECIFIC_CLUSTER -> ClusterConnectionManager.getCluster(forwardToClusterId)
                         .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                case SERVER_CLUSTER -> ClusterConnectionManager.getResponsibleCluster(guildId)
+                case SPECIFIC_GUILD -> ClusterConnectionManager.getResponsibleCluster(guildId)
                         .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
             };
         } catch (InterruptedException e) {

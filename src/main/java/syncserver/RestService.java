@@ -28,13 +28,18 @@ public class RestService {
             }
 
             JSONObject responseJson = null;
+            boolean completedSuccessfully = false;
             try {
                 responseJson = EventManager.getEvent(name).apply(clusterId, requestJson);
+                completedSuccessfully = true;
             } catch (Throwable e) {
                 LOGGER.error("Error in event \"{}\"", name, e);
             }
             if (responseJson == null) {
                 responseJson = new JSONObject();
+            }
+            if (!responseJson.has("completed_successfully")) {
+                responseJson.put("completed_successfully", completedSuccessfully);
             }
             return responseJson.toString();
         } catch (Throwable e) {
