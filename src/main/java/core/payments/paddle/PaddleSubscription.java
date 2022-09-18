@@ -12,8 +12,9 @@ public class PaddleSubscription {
     private final String status;
     private final String totalPrice;
     private final LocalDate nextPayment;
+    private final String updateUrl;
 
-    public PaddleSubscription(int subId, int planId, long userId, boolean unlocksServer, int quantity, String status, String totalPrice, LocalDate nextPayment) {
+    public PaddleSubscription(int subId, int planId, long userId, boolean unlocksServer, int quantity, String status, String totalPrice, LocalDate nextPayment, String updateUrl) {
         this.subId = subId;
         this.planId = planId;
         this.userId = userId;
@@ -22,6 +23,7 @@ public class PaddleSubscription {
         this.status = status;
         this.totalPrice = totalPrice;
         this.nextPayment = nextPayment;
+        this.updateUrl = updateUrl;
     }
 
     public int getSubId() {
@@ -54,6 +56,10 @@ public class PaddleSubscription {
 
     public LocalDate getNextPayment() {
         return nextPayment;
+    }
+
+    public String getUpdateUrl() {
+        return updateUrl;
     }
 
 }

@@ -70,7 +70,8 @@ public class PaddleCache {
                     json.has("quantity") ? json.getInt("quantity") : 1,
                     json.getString("state"),
                     String.format("%s %.02f", json.getJSONObject("last_payment").getString("currency"), json.getJSONObject("last_payment").getDouble("amount")),
-                    json.has("next_payment") ? LocalDate.parse(json.getJSONObject("next_payment").getString("date")) : null
+                    json.has("next_payment") ? LocalDate.parse(json.getJSONObject("next_payment").getString("date")) : null,
+                    json.getString("update_url")
             );
         } else {
             return null;
