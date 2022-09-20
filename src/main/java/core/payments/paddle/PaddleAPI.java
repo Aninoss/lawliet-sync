@@ -1,6 +1,7 @@
 package core.payments.paddle;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,9 +9,12 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PaddleAPI {
 
+    private final static Logger LOGGER = LoggerFactory.getLogger(PaddleAPI.class);
     private static final String USER_AGENT = "Lawliet Discord Bot made by Aninoss#7220";
 
     private static final OkHttpClient client;
@@ -22,9 +26,9 @@ public class PaddleAPI {
         client = new OkHttpClient.Builder()
                 .connectionPool(connectionPool)
                 .dispatcher(dispatcher)
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .writeTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(10, TimeUnit.SECONDS)
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
                 .cache(null)
                 .build();
     }
@@ -37,7 +41,7 @@ public class PaddleAPI {
         ArrayList<JSONObject> subs = new ArrayList<>();
         JSONArray array = null;
         for(int page = 1; array == null || array.length() >= 200; page++) {
-            array = retrieveSubscriptions(subId, page).getJSONArray("response");
+            array = retrieveSubscriptions(subId, page, 5).getJSONArray("response");
             for (int i = 0; i < array.length(); i++) {
                 subs.add(array.getJSONObject(i));
             }
@@ -45,7 +49,7 @@ public class PaddleAPI {
         return Collections.unmodifiableList(subs);
     }
 
-    private static JSONObject retrieveSubscriptions(int subId, int page) throws IOException {
+    private static JSONObject retrieveSubscriptions(int subId, int page, int counter) throws IOException {
         FormBody.Builder formBodyBuilder = new FormBody.Builder()
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
@@ -65,6 +69,13 @@ public class PaddleAPI {
 
         try (Response response = client.newCall(request).execute()) {
             return new JSONObject(response.body().string());
+        } catch (SocketTimeoutException e) {
+            if (--counter > 0) {
+                LOGGER.error("Paddle timeout, retrying...", e);
+                return retrieveSubscriptions(subId, page, counter);
+            } else {
+                throw e;
+            }
         }
     }
 
