@@ -8,6 +8,8 @@ import core.payments.PremiumManager;
 import core.payments.paddle.PaddleCache;
 import core.payments.stripe.StripeCache;
 import mysql.modules.paddlesubscriptions.DBPaddleSubscriptions;
+import mysql.modules.premium.DBPremium;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,14 @@ public class OnStripe implements SyncServerFunction {
                 PaddleCache.reload(subId);
             } catch (IOException e) {
                 LOGGER.error("Paddle error", e);
+            }
+            if (jsonObject.has("preset_guilds")) {
+                JSONArray presetGuilds = jsonObject.getJSONArray("preset_guilds");
+                int currentSlot = PremiumManager.retrieveUnlockServersNumber(userId) - presetGuilds.length();
+                for (int i = 0; i < presetGuilds.length(); i++) {
+                    long guildId = presetGuilds.getLong(i);
+                    DBPremium.modify(userId, currentSlot++, guildId);
+                }
             }
         } else {
             try {
