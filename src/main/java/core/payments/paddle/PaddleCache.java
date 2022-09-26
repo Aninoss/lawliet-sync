@@ -54,6 +54,10 @@ public class PaddleCache {
         LOGGER.info("Paddle load successful ({})", subscriptionMap.size());
     }
 
+    public static synchronized void put(PaddleSubscription paddleSubscription) {
+        subscriptionMap.put(paddleSubscription.getSubId(), paddleSubscription);
+    }
+
     public static Collection<PaddleSubscription> getSubscriptions() {
         return Collections.unmodifiableCollection(subscriptionMap.values());
     }
