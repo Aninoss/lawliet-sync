@@ -21,7 +21,9 @@ public class AsyncTimer implements AutoCloseable {
         thread = Thread.currentThread();
         executorService.schedule(() -> {
             if (pending) {
-                LOGGER.error("Async timer interrupted: {}", thread.getName());
+                Exception e = new Exception("Interrupted");
+                e.setStackTrace(thread.getStackTrace());
+                LOGGER.error("Async timer interrupted: {}", thread.getName(), e);
                 interrupt();
             }
         }, duration.toMillis(), TimeUnit.MILLISECONDS);
