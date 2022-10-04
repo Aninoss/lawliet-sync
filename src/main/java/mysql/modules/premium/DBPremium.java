@@ -20,8 +20,7 @@ public class DBPremium {
                      FROM Premium;
                      """;
 
-        try {
-            Statement statement = DBMain.getInstance().statementExecuted(sql);
+        try(Statement statement = DBMain.getInstance().statementExecuted(sql)) {
             ResultSet resultSet = statement.getResultSet();
             while(resultSet.next()) {
                 long userId = resultSet.getLong(1);

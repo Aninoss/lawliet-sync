@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import core.ExceptionLogger;
 import core.payments.PremiumManager;
@@ -25,7 +26,11 @@ public class OnPaddle implements SyncServerFunction {
         long userId = jsonObject.getLong("user_id");
         int subId = jsonObject.has("sub_id") ? jsonObject.getInt("sub_id") : 0;
         boolean unlocksServer = jsonObject.getBoolean("unlocks_server");
-        DBPaddleSubscriptions.savePaddleSubscription(subId, userId, unlocksServer);
+        try {
+            DBPaddleSubscriptions.savePaddleSubscription(subId, userId, unlocksServer);
+        } catch (SQLException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         PaddleSubscription paddleSubscription = generatePaddleSubscription(jsonObject);
         PaddleCache.put(paddleSubscription);
