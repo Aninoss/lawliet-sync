@@ -18,18 +18,15 @@ public class OnFRPost implements SyncServerFunction {
         int id = getNextId();
 
         DBFeatureRequests.postFeatureRequest(id, userId, title, desc);
-        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
-            SyncUtil.sendUserNotification(
-                    cluster,
-                    ClusterConnectionManager.OWNER_ID,
-                    title == null || title.isEmpty() ? "Empty Title" : title,
-                    desc,
-                    "Feature Request: " + id,
-                    null,
-                    null,
-                    String.valueOf(userId)
-            ).exceptionally(ExceptionLogger.get());
-        });
+
+        Cluster cluster = ClusterConnectionManager.getResponsibleCluster(557953262305804308L);
+        JSONObject dataJson = new JSONObject();
+        dataJson.put("title", title);
+        dataJson.put("desc", desc);
+        dataJson.put("id", id);
+        dataJson.put("user_id", userId);
+        cluster.send(EventOut.FR_NOTIFICATION, dataJson)
+                .exceptionally(ExceptionLogger.get());
 
         return new JSONObject();
     }

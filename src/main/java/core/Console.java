@@ -6,9 +6,6 @@ import java.util.Scanner;
 import core.payments.PatreonCache;
 import core.util.SystemUtil;
 import mysql.RedisManager;
-import mysql.modules.featurerequests.DBFeatureRequests;
-import mysql.modules.featurerequests.FREntryData;
-import mysql.modules.featurerequests.FRPanelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
@@ -87,32 +84,11 @@ public class Console {
         };
 
         int id = Integer.parseInt(args[2]);
-        FREntryData entryData = DBFeatureRequests.fetchFeatureRequest(Integer.parseInt(args[2]));
-        String title;
-        String desc;
         if (accept) {
-            DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.PENDING, true);
-            title = String.format("✅ Your feature request \"%s\" has been accepted", entryData.getTitle());
-            desc = String.format("You should now [boost](https://lawlietbot.xyz/featurerequests?search=%d) your entry to increase it's exposure!", id);
+            FeatureRequests.accept(id);
         } else {
-            DBFeatureRequests.updateFeatureRequestStatus(entryData.getId(), FRPanelType.REJECTED, false);
-            title = String.format("❌ Unfortunately, your feature request \"%s\" got rejected", entryData.getTitle());
-            String content = collectArgs(args, 3);
-            desc = content.length() > 0 ? String.format("Reason:```%s```", collectArgs(args, 3)) : null;
+            FeatureRequests.deny(id, collectArgs(args, 3));
         }
-
-        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
-            SyncUtil.sendUserNotification(
-                    cluster,
-                    entryData.getUserId(),
-                    title,
-                    desc,
-                    null,
-                    null,
-                    null,
-                    null
-            ).exceptionally(ExceptionLogger.get());
-        });
 
         LOGGER.info("Feature Request Update Successful");
     }

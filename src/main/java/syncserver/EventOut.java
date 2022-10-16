@@ -12,6 +12,7 @@ public enum EventOut {
     REPORT,
     PATREON,
     TOPGG,
-    TOPGG_ANICORD
+    TOPGG_ANICORD,
+    FR_NOTIFICATION
 
 }
