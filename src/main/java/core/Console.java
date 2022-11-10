@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Scanner;
 import core.payments.PatreonCache;
+import core.payments.PremiumManager;
 import core.util.SystemUtil;
 import mysql.RedisManager;
 import org.slf4j.Logger;
@@ -54,6 +55,13 @@ public class Console {
         tasks.put("patreon_update", this::onPatreonUpdate);
         tasks.put("reports_ban", this::onReportsBan);
         tasks.put("reports_unban", this::onReportsUnban);
+        tasks.put("user", this::onUser);
+    }
+
+    private void onUser(String[] args) {
+        long userId = Long.parseLong(args[1]);
+        int n = PremiumManager.retrieveUnlockServersNumber(userId);
+        LOGGER.info("Number of unlocked servers for {}: {}", userId, n);
     }
 
     private void onReportsBan(String[] args) {
