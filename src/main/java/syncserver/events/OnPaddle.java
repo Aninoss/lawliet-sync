@@ -24,7 +24,7 @@ public class OnPaddle implements SyncServerFunction {
         LOGGER.info("New subscription received");
 
         long userId = jsonObject.getLong("user_id");
-        int subId = jsonObject.has("sub_id") ? jsonObject.getInt("sub_id") : 0;
+        long subId = jsonObject.has("sub_id") ? jsonObject.getLong("sub_id") : 0;
         boolean unlocksServer = jsonObject.getBoolean("unlocks_server");
         try {
             DBPaddleSubscriptions.savePaddleSubscription(subId, userId, unlocksServer);
@@ -69,8 +69,8 @@ public class OnPaddle implements SyncServerFunction {
 
     private PaddleSubscription generatePaddleSubscription(JSONObject json) {
         return new PaddleSubscription(
-                json.getInt("sub_id"),
-                json.getInt("plan_id"),
+                json.getLong("sub_id"),
+                json.getLong("plan_id"),
                 json.getLong("user_id"),
                 json.getBoolean("unlocks_server"),
                 json.getInt("quantity"),

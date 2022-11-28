@@ -37,7 +37,7 @@ public class PaddleAPI {
         return retrieveSubscriptions(0);
     }
 
-    public static List<JSONObject> retrieveSubscriptions(int subId) throws IOException {
+    public static List<JSONObject> retrieveSubscriptions(long subId) throws IOException {
         ArrayList<JSONObject> subs = new ArrayList<>();
         JSONArray array = null;
         for(int page = 1; array == null || array.length() >= 200; page++) {
@@ -49,7 +49,7 @@ public class PaddleAPI {
         return Collections.unmodifiableList(subs);
     }
 
-    private static JSONObject retrieveSubscriptions(int subId, int page, int counter) throws IOException {
+    private static JSONObject retrieveSubscriptions(long subId, int page, int counter) throws IOException {
         FormBody.Builder formBodyBuilder = new FormBody.Builder()
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))

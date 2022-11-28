@@ -16,8 +16,9 @@ public class PaddleCache {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PaddleCache.class);
     private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private static final HashMap<Long, PaddleSubscription> subscriptionMap = new HashMap<>();
 
-    private static final HashMap<Integer, PaddleSubscription> subscriptionMap = new HashMap<>();
+    private static boolean modified = false;
 
     public static void startScheduler() throws IOException {
         reload();
@@ -34,14 +35,21 @@ public class PaddleCache {
         reload(0);
     }
 
-    public static synchronized void reload(int subId) throws IOException {
-        Map<Integer, PaddleData> paddleDBMap = DBPaddleSubscriptions.retrievePaddleSubscriptionMap();
-        List<JSONObject> subscriptions;
+    public static synchronized void reload(long subId) throws IOException {
+        modified = false;
+        Map<Long, PaddleData> paddleDBMap = DBPaddleSubscriptions.retrievePaddleSubscriptionMap();
+        List<JSONObject> subscriptions = subId > 0
+                ? PaddleAPI.retrieveSubscriptions(subId)
+                : PaddleAPI.retrieveSubscriptions();
+
+        if (modified) {
+            LOGGER.info("Paddle load cancelled to prevent race condition");
+            return;
+        }
+
         if (subId > 0) {
-            subscriptions = PaddleAPI.retrieveSubscriptions(subId);
             subscriptionMap.remove(subId);
         } else {
-            subscriptions = PaddleAPI.retrieveSubscriptions();
             subscriptionMap.clear();
         }
         for (JSONObject json : subscriptions) {
@@ -55,6 +63,7 @@ public class PaddleCache {
     }
 
     public static void put(PaddleSubscription paddleSubscription) {
+        modified = true;
         subscriptionMap.put(paddleSubscription.getSubId(), paddleSubscription);
     }
 
@@ -62,13 +71,13 @@ public class PaddleCache {
         return Collections.unmodifiableCollection(subscriptionMap.values());
     }
 
-    private static PaddleSubscription extractPaddleSubscription(Map<Integer, PaddleData> paddleDBMap, JSONObject json) {
-        int subId = json.getInt("subscription_id");
+    private static PaddleSubscription extractPaddleSubscription(Map<Long, PaddleData> paddleDBMap, JSONObject json) {
+        long subId = json.getLong("subscription_id");
         PaddleData data = paddleDBMap.get(subId);
         if (data != null) {
             return new PaddleSubscription(
                     data.getSubId(),
-                    json.getInt("plan_id"),
+                    json.getLong("plan_id"),
                     data.getUserId(),
                     data.unlocksServer(),
                     json.has("quantity") ? json.getInt("quantity") : 1,

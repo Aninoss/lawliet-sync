@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class PaddleSubscription {
 
-    private final int subId;
-    private final int planId;
+    private final long subId;
+    private final long planId;
     private final long userId;
     private final boolean unlocksServer;
     private final int quantity;
@@ -14,7 +14,7 @@ public class PaddleSubscription {
     private final LocalDate nextPayment;
     private final String updateUrl;
 
-    public PaddleSubscription(int subId, int planId, long userId, boolean unlocksServer, int quantity, String status, String totalPrice, LocalDate nextPayment, String updateUrl) {
+    public PaddleSubscription(long subId, long planId, long userId, boolean unlocksServer, int quantity, String status, String totalPrice, LocalDate nextPayment, String updateUrl) {
         this.subId = subId;
         this.planId = planId;
         this.userId = userId;
@@ -26,11 +26,11 @@ public class PaddleSubscription {
         this.updateUrl = updateUrl;
     }
 
-    public int getSubId() {
+    public long getSubId() {
         return subId;
     }
 
-    public int getPlanId() {
+    public long getPlanId() {
         return planId;
     }
 
