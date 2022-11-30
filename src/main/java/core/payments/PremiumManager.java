@@ -17,6 +17,13 @@ import org.json.JSONObject;
 
 public class PremiumManager {
 
+    public static boolean userIsPremium(long userId) {
+        PatreonBean patreonBean = DBPatreon.getInstance().getBean().get(userId);
+        return (patreonBean != null && patreonBean.isValid()) ||
+                StripeManager.retrieveActiveSubscriptions(userId).size() > 0 ||
+                PaddleManager.retrieveActiveSubscriptions(userId).size() > 0;
+    }
+
     public static int retrieveBoostsTotal(long userId) {
         int patreonBoosts = PatreonCache.getInstance().getUserTier(userId) - 1;
         int stripeBoosts = 0;
