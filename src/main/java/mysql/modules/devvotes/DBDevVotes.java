@@ -9,14 +9,14 @@ import mysql.DBMain;
 
 public class DBDevVotes {
 
-    public static boolean reminderIsActive(long userId) {
+    public static Boolean reminderIsActive(long userId) {
         String sql = """
                      SELECT active
                      FROM DevVotesReminders
                      WHERE userId = ?;
                      """;
 
-        boolean active = true;
+        Boolean active = null;
         try {
             PreparedStatement preparedStatement = DBMain.getInstance().preparedStatement(sql);
             preparedStatement.setLong(1, userId);
@@ -25,6 +25,9 @@ public class DBDevVotes {
             ResultSet resultSet = preparedStatement.getResultSet();
             if (resultSet.next()) {
                 active = resultSet.getBoolean(1);
+                if (resultSet.wasNull()) {
+                    active = null;
+                }
             }
 
             resultSet.close();
@@ -65,10 +68,23 @@ public class DBDevVotes {
         return userVotes;
     }
 
-    public static void updateReminder(long userId, boolean active) throws SQLException, InterruptedException {
-        DBMain.getInstance().update("REPLACE INTO DevVotesReminders (userId, active) VALUES (?, ?);", preparedStatement -> {
+    public static void updateReminder(long userId, Boolean active, String locale) throws SQLException, InterruptedException {
+        if (active == null) {
+            updateReminder(userId, locale);
+            return;
+        }
+
+        DBMain.getInstance().update("REPLACE INTO DevVotesReminders (userId, active, locale) VALUES (?, ?, ?);", preparedStatement -> {
             preparedStatement.setLong(1, userId);
             preparedStatement.setBoolean(2, active);
+            preparedStatement.setString(3, locale);
+        });
+    }
+
+    private static void updateReminder(long userId, String locale) throws SQLException, InterruptedException {
+        DBMain.getInstance().update("REPLACE INTO DevVotesReminders (userId, locale) VALUES (?, ?);", preparedStatement -> {
+            preparedStatement.setLong(1, userId);
+            preparedStatement.setString(2, locale);
         });
     }
 

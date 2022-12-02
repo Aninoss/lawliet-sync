@@ -12,10 +12,14 @@ public class OnDevVotesUpdateReminder implements SyncServerFunction {
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long userId = jsonObject.getLong("user_id");
-        boolean active = jsonObject.getBoolean("active");
+        Boolean active = null;
+        if (jsonObject.has("active")) {
+            active = jsonObject.getBoolean("active");
+        }
+        String locale = jsonObject.getString("locale");
 
         try {
-            DBDevVotes.updateReminder(userId, active);
+            DBDevVotes.updateReminder(userId, active, locale);
         } catch (SQLException | InterruptedException e) {
             throw new RuntimeException(e);
         }

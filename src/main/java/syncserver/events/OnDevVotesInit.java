@@ -1,5 +1,7 @@
 package syncserver.events;
 
+import java.sql.SQLException;
+import java.util.Objects;
 import core.payments.PremiumManager;
 import mysql.modules.devvotes.DBDevVotes;
 import org.json.JSONArray;
@@ -15,18 +17,25 @@ public class OnDevVotesInit implements SyncServerFunction {
         long userId = jsonObject.getLong("user_id");
         int year = jsonObject.getInt("year");
         int month = jsonObject.getInt("month");
+        String locale = jsonObject.getString("locale");
         boolean premium = PremiumManager.userIsPremium(userId);
 
         JSONObject responseJson = new JSONObject();
         responseJson.put("premium", premium);
 
         if (premium) {
-            responseJson.put("reminder_active", DBDevVotes.reminderIsActive(userId));
+            Boolean active = DBDevVotes.reminderIsActive(userId);
+            responseJson.put("reminder_active", Objects.requireNonNullElse(active, true));
             JSONArray votesJsonArray = new JSONArray();
             for (String userVote : DBDevVotes.getUserVotes(userId, year, month)) {
                 votesJsonArray.put(userVote);
             }
             responseJson.put("votes", votesJsonArray);
+            try {
+                DBDevVotes.updateReminder(userId, active, locale);
+            } catch (SQLException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return responseJson;
