@@ -61,7 +61,7 @@ public class Console {
     private void onUser(String[] args) {
         long userId = Long.parseLong(args[1]);
         int n = PremiumManager.retrieveUnlockServersNumber(userId);
-        LOGGER.info("Number of unlocked servers for {}: {}", userId, n);
+        LOGGER.info("Number of unlocked servers for {}: {}; premium: {}", userId, n, PremiumManager.userIsPremium(userId));
     }
 
     private void onReportsBan(String[] args) {
