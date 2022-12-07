@@ -68,6 +68,40 @@ public class DBDevVotes {
         return userVotes;
     }
 
+    public static List<VoteResultSlot> getVoteResult(int year, int month) {
+        String sql = """
+                     SELECT selected, COUNT(*) AS votes
+                     FROM DevVotesUservotes
+                     WHERE `year` = ? AND `month` = ?
+                     GROUP BY selected
+                     ORDER BY votes DESC;
+                     """;
+
+        ArrayList<VoteResultSlot> voteResultSlots = new ArrayList<>();
+        try {
+            PreparedStatement preparedStatement = DBMain.getInstance().preparedStatement(sql);
+            preparedStatement.setInt(1, year);
+            preparedStatement.setInt(2, month);
+            preparedStatement.execute();
+
+            ResultSet resultSet = preparedStatement.getResultSet();
+            while (resultSet.next()) {
+                VoteResultSlot voteResultSlot = new VoteResultSlot(
+                        resultSet.getString(1),
+                        resultSet.getInt(2)
+                );
+                voteResultSlots.add(voteResultSlot);
+            }
+
+            resultSet.close();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return voteResultSlots;
+    }
+
     public static void updateReminder(long userId, Boolean active, String locale) throws SQLException, InterruptedException {
         if (active == null) {
             updateReminder(userId, locale);

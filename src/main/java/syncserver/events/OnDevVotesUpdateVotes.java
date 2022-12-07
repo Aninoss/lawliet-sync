@@ -2,6 +2,7 @@ package syncserver.events;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import mysql.modules.devvotes.DBDevVotes;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,6 +14,10 @@ public class OnDevVotesUpdateVotes implements SyncServerFunction {
 
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) >= 8) {
+            return null;
+        }
+
         long userId = jsonObject.getLong("user_id");
         int year = jsonObject.getInt("year");
         int month = jsonObject.getInt("month");
