@@ -102,6 +102,34 @@ public class DBDevVotes {
         return voteResultSlots;
     }
 
+    public static int getVoteResultTotalVotes(int year, int month) {
+        String sql = """
+                     SELECT COUNT(DISTINCT userId)
+                     FROM DevVotesUservotes
+                     WHERE `year` = ? AND `month` = ?;
+                     """;
+
+        int totalVotes = 0;
+        try {
+            PreparedStatement preparedStatement = DBMain.getInstance().preparedStatement(sql);
+            preparedStatement.setInt(1, year);
+            preparedStatement.setInt(2, month);
+            preparedStatement.execute();
+
+            ResultSet resultSet = preparedStatement.getResultSet();
+            if (resultSet.next()) {
+                totalVotes = resultSet.getInt(1);
+            }
+
+            resultSet.close();
+            preparedStatement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return totalVotes;
+    }
+
     public static void updateReminder(long userId, Boolean active, String locale) throws SQLException, InterruptedException {
         if (active == null) {
             updateReminder(userId, locale);

@@ -44,6 +44,7 @@ public class OnDevVotesInit implements SyncServerFunction {
                     voteResultJsonArray.put(voteResultJson);
                 }
                 responseJson.put("vote_result", voteResultJsonArray);
+                responseJson.put("total_votes", DBDevVotes.getVoteResultTotalVotes(year, month));
             }
 
             try {

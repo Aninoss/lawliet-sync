@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import com.stripe.model.Subscription;
+import core.Program;
 import core.payments.paddle.PaddleManager;
 import core.payments.paddle.PaddleSubscription;
 import core.payments.stripe.StripeManager;
@@ -18,7 +19,8 @@ import org.json.JSONObject;
 public class PremiumManager {
 
     public static boolean userIsPremium(long userId) {
-        return PatreonCache.getInstance().getUserTier(userId) > 0 ||
+        return !Program.isProductionMode() ||
+                PatreonCache.getInstance().getUserTier(userId) > 0 ||
                 StripeManager.retrieveActiveSubscriptions(userId).size() > 0 ||
                 PaddleManager.retrieveActiveSubscriptions(userId).size() > 0;
     }
