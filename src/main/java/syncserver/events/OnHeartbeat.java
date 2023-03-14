@@ -1,5 +1,7 @@
 package syncserver.events;
 
+import java.util.HashSet;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
@@ -38,6 +40,15 @@ public class OnHeartbeat implements SyncServerFunction {
         long totalServers;
         if (jsonObject.has("total_servers") && (totalServers = jsonObject.getLong("total_servers")) > 0L) {
             ClusterConnectionManager.getCluster(clusterId).setLocalServerSize(totalServers);
+        }
+
+        if (jsonObject.has("server_ids")) {
+            HashSet<Long> serverIds = new HashSet<>();
+            JSONArray serverIdsJsonArray = jsonObject.getJSONArray("server_ids");
+            for (int i = 0; i < serverIdsJsonArray.length(); i++) {
+                serverIds.add(serverIdsJsonArray.getLong(i));
+            }
+            ClusterConnectionManager.getCluster(clusterId).setServerIds(serverIds);
         }
 
         return null;

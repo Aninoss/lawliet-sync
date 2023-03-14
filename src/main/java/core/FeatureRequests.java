@@ -32,7 +32,7 @@ public class FeatureRequests {
     }
 
     private static void send(long userId, String title, String desc) {
-        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
+        ClusterConnectionManager.getFirstFullyConnectedPublicCluster().ifPresent(cluster -> {
             SyncUtil.sendUserNotification(
                     cluster,
                     userId,

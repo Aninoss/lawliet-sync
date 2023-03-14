@@ -50,7 +50,7 @@ public class OnPaddle implements SyncServerFunction {
 
         String title = jsonObject.getString("title");
         String desc = jsonObject.getString("desc");
-        ClusterConnectionManager.getFirstFullyConnectedCluster().ifPresent(cluster -> {
+        ClusterConnectionManager.getFirstFullyConnectedPublicCluster().ifPresent(cluster -> {
             SyncUtil.sendUserNotification(
                     cluster,
                     userId,

@@ -1,8 +1,7 @@
 package syncserver;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +26,7 @@ public class Cluster {
 
     private final int clusterId;
     private final String ip;
+    private Set<Long> serverIds = Collections.emptySet();
     private ConnectionStatus connectionStatus = ConnectionStatus.OFFLINE;
     private Long localServerSize = null;
 
@@ -67,6 +67,10 @@ public class Cluster {
         return clusterId;
     }
 
+    public boolean isPublicCluster() {
+        return clusterId >= 0;
+    }
+
     public String getIp() {
         return ip;
     }
@@ -75,8 +79,16 @@ public class Cluster {
         return connectionStatus;
     }
 
+    public Set<Long> getServerIds() {
+        return serverIds;
+    }
+
+    public void setServerIds(Set<Long> serverIds) {
+        this.serverIds = serverIds;
+    }
+
     public int getShardIntervalMin() {
-        if (Program.isProductionMode()) {
+        if (Program.isProductionMode() && isPublicCluster()) {
             return (clusterId - 1) * 16;
         } else {
             return 0;
@@ -84,7 +96,7 @@ public class Cluster {
     }
 
     public int getShardIntervalMax() {
-        if (Program.isProductionMode()) {
+        if (Program.isProductionMode() && isPublicCluster()) {
             return (clusterId - 1) * 16 + 15;
         } else {
             return 0;

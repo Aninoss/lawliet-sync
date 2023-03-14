@@ -111,7 +111,7 @@ public class Console {
             inputBuilder.append(args[i]);
         }
 
-        if (clusterId >= 1) {
+        if (clusterId != -1) {
             SyncUtil.sendCmd(ClusterConnectionManager.getCluster(clusterId), inputBuilder.toString())
                     .exceptionally(ExceptionLogger.get());
         } else {
@@ -134,13 +134,17 @@ public class Console {
 
     private void onServer(String[] args) {
         long serverId = Long.parseLong(args[1]);
-        int cluster = ClusterConnectionManager.getResponsibleCluster(serverId).getClusterId();
-        int shard = ClusterConnectionManager.getResponsibleShard(serverId);
-        LOGGER.info("Server: {}; Cluster: {}; Shard: {}", serverId, cluster, shard);
+        Cluster cluster = ClusterConnectionManager.getResponsibleCluster(serverId);
+        if (cluster.isPublicCluster()) {
+            int shard = ClusterConnectionManager.getResponsibleShard(serverId);
+            LOGGER.info("Server: {}; Cluster: {}; Shard: {}", serverId, cluster.getClusterId(), shard);
+        } else {
+            LOGGER.info("Server: {}; Cluster: {}", serverId, cluster.getClusterId());
+        }
     }
 
     private void onClusters(String[] args) {
-        ClusterConnectionManager.getClusters().forEach(cluster -> {
+        ClusterConnectionManager.getPublicClusters().forEach(cluster -> {
             LOGGER.info(
                     "Cluster {}: {} ({} servers, shard {} - {})",
                     cluster.getClusterId(),

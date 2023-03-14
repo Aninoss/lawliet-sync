@@ -41,7 +41,7 @@ public class ClusterConnectionManager {
         if (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             LOGGER.info("Cluster {} is fully connected", clusterId);
             cluster.setConnectionStatus(Cluster.ConnectionStatus.FULLY_CONNECTED);
-            if (ClusterConnectionManager.totalShards == null) {
+            if (cluster.isPublicCluster() && ClusterConnectionManager.totalShards == null) {
                 ClusterConnectionManager.totalShards = totalShards;
             }
         }
@@ -51,7 +51,9 @@ public class ClusterConnectionManager {
         LOGGER.info("Adding unconnected cluster with id: {}, alreadyPresent: {}", clusterId, clusterMap.containsKey(clusterId));
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, ip));
         cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
-        submitConnectCluster(cluster, false, false);
+        if (cluster.isPublicCluster()) {
+            submitConnectCluster(cluster, false, false);
+        }
     }
 
     public static synchronized void registerConnectedCluster(int clusterId, int totalShards, String ip) {
@@ -68,7 +70,7 @@ public class ClusterConnectionManager {
     }
 
     public static void start() {
-        List<Cluster> clusters = getClusters();
+        List<Cluster> clusters = getPublicClusters();
         int totalShards = Program.isProductionMode() ? clusters.size() * 16 : 1;
         if (ClusterConnectionManager.totalShards != null && ClusterConnectionManager.totalShards != totalShards) {
             LOGGER.info("Shard size has changed");
@@ -112,7 +114,7 @@ public class ClusterConnectionManager {
             LOGGER.info("Connecting cluster {}", cluster.getClusterId());
 
             if (sendBlockShards) {
-                ClusterConnectionManager.getFullyConnectedClusters().stream()
+                ClusterConnectionManager.getFullyConnectedPublicClusters().stream()
                         .filter(c -> c.getClusterId() > cluster.getClusterId())
                         .forEach(c -> {
                             JSONObject dataJson = new JSONObject();
@@ -124,7 +126,7 @@ public class ClusterConnectionManager {
             }
 
             cluster.setConnectionStatus(Cluster.ConnectionStatus.BOOTING_UP);
-            while(true) {
+            while (true) {
                 try {
                     JSONObject dataJson = new JSONObject();
                     dataJson.put("shard_min", cluster.getShardIntervalMin());
@@ -150,13 +152,11 @@ public class ClusterConnectionManager {
 
     public static Optional<Long> getGlobalServerSize() {
         long globalServerSize = 0;
-        for (Cluster cluster : ClusterConnectionManager.getClusters()) {
+        for (Cluster cluster : ClusterConnectionManager.getPublicClusters()) {
             if (cluster.getLocalServerSize().isPresent()) {
-                if (cluster.getLocalServerSize().isEmpty()) {
-                    globalServerSize = 0;
-                    break;
-                }
                 globalServerSize += cluster.getLocalServerSize().get();
+            } else {
+                return Optional.empty();
             }
         }
         return globalServerSize > 0 ? Optional.of(globalServerSize) : Optional.empty();
@@ -172,6 +172,13 @@ public class ClusterConnectionManager {
                 .collect(Collectors.toList());
     }
 
+    public static List<Cluster> getPublicClusters() {
+        return clusterMap.values().stream()
+                .filter(Cluster::isPublicCluster)
+                .sorted(Comparator.comparingInt(Cluster::getClusterId))
+                .collect(Collectors.toList());
+    }
+
     public static List<Cluster> getFullyConnectedClusters() {
         return clusterMap.values().stream()
                 .filter(cluster -> cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED)
@@ -179,15 +186,28 @@ public class ClusterConnectionManager {
                 .collect(Collectors.toList());
     }
 
-    public static Optional<Cluster> getFirstFullyConnectedCluster() {
+    public static List<Cluster> getFullyConnectedPublicClusters() {
         return clusterMap.values().stream()
-                .filter(c -> c.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED)
+                .filter(cluster -> cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED && cluster.isPublicCluster())
+                .sorted(Comparator.comparingInt(Cluster::getClusterId))
+                .collect(Collectors.toList());
+    }
+
+    public static Optional<Cluster> getFirstFullyConnectedPublicCluster() {
+        return clusterMap.values().stream()
+                .filter(c -> c.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED && c.isPublicCluster())
                 .findFirst();
     }
 
     public static Cluster getResponsibleCluster(long serverId) {
+        for (Cluster cluster : clusterMap.values()) {
+            if (!cluster.isPublicCluster() && cluster.getServerIds().contains(serverId)) {
+                return cluster;
+            }
+        }
+
         int shard = getResponsibleShard(serverId);
-        for (Cluster cluster : getClusters()) {
+        for (Cluster cluster : getPublicClusters()) {
             if (shard >= cluster.getShardIntervalMin() && shard <= cluster.getShardIntervalMax()) {
                 return cluster;
             }

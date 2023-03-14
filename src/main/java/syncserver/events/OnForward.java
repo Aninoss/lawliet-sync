@@ -35,7 +35,7 @@ public class OnForward implements SyncServerFunction {
                     }
                     yield null;
                 }
-                case ANY_CLUSTER -> ClusterConnectionManager.getFirstFullyConnectedCluster().get()
+                case ANY_CLUSTER -> ClusterConnectionManager.getFirstFullyConnectedPublicCluster().get()
                         .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
                 case SPECIFIC_CLUSTER -> ClusterConnectionManager.getCluster(forwardToClusterId)
                         .send(event, jsonObject).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);

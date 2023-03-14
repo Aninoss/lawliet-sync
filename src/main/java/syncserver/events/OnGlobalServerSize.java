@@ -16,7 +16,7 @@ public class OnGlobalServerSize implements SyncServerFunction {
         JSONObject responseJson = new JSONObject();
 
         ClusterConnectionManager.getCluster(clusterId).setLocalServerSize(localServerSize);
-        for (Cluster cluster : ClusterConnectionManager.getClusters()) {
+        for (Cluster cluster : ClusterConnectionManager.getPublicClusters()) {
             if (cluster.getLocalServerSize().isPresent()) {
                 globalServerSize += cluster.getLocalServerSize().get();
             } else {

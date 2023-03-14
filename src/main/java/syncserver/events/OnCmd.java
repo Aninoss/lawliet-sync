@@ -11,7 +11,7 @@ public class OnCmd implements SyncServerFunction {
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         int toClusterId = jsonObject.getInt("cluster_id");
         String command = jsonObject.getString("command");
-        if (toClusterId >= 1) {
+        if (toClusterId != -1) {
             SyncUtil.sendCmd(ClusterConnectionManager.getCluster(toClusterId), command)
                     .exceptionally(ExceptionLogger.get());
         } else {
