@@ -24,7 +24,7 @@ public class OnPaddleSubscriptions implements SyncServerFunction {
         }
 
         JSONArray subsJson = new JSONArray();
-        for (PaddleSubscription subscription : PaddleManager.retrieveSubscriptions(userId)) {
+        for (PaddleSubscription subscription : PaddleManager.retrieveSubscriptionsByUserId(userId)) {
             JSONObject subJson = new JSONObject();
             subJson.put("sub_id", subscription.getSubId());
             subJson.put("plan_id", subscription.getPlanId());

@@ -71,6 +71,10 @@ public class PaddleCache {
         return Collections.unmodifiableCollection(subscriptionMap.values());
     }
 
+    public static Map<Long, PaddleSubscription> getSubscriptionMap() {
+        return Collections.unmodifiableMap(subscriptionMap);
+    }
+
     private static PaddleSubscription extractPaddleSubscription(Map<Long, PaddleData> paddleDBMap, JSONObject json) {
         long subId = json.getLong("subscription_id");
         PaddleData data = paddleDBMap.get(subId);

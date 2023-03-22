@@ -22,7 +22,7 @@ public class PremiumManager {
         return !Program.isProductionMode() ||
                 PatreonCache.getInstance().getUserTier(userId) > 0 ||
                 StripeManager.retrieveActiveSubscriptions(userId).size() > 0 ||
-                PaddleManager.retrieveActiveSubscriptions(userId).size() > 0;
+                PaddleManager.retrieveActiveSubscriptionsByUserId(userId).size() > 0;
     }
 
     public static int retrieveBoostsTotal(long userId) {
@@ -30,7 +30,7 @@ public class PremiumManager {
         int stripeBoosts = 0;
         if (StripeManager.retrieveActiveSubscriptions(userId).size() > 0) {
             stripeBoosts = 2;
-        } else if (PaddleManager.retrieveActiveSubscriptions(userId).size() > 0) {
+        } else if (PaddleManager.retrieveActiveSubscriptionsByUserId(userId).size() > 0) {
             stripeBoosts = 2;
         }
         return 1 + Math.max(patreonBoosts, stripeBoosts);
@@ -44,7 +44,7 @@ public class PremiumManager {
                 n += subscription.getItems().getData().get(0).getQuantity();
             }
         }
-        for (PaddleSubscription subscription : PaddleManager.retrieveActiveSubscriptions(userId)) {
+        for (PaddleSubscription subscription : PaddleManager.retrieveActiveSubscriptionsByUserId(userId)) {
             if (subscription.unlocksServer()) {
                 n += subscription.getQuantity();
             }
