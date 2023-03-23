@@ -1,16 +1,21 @@
 package core;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 import core.payments.PatreonCache;
 import core.payments.PremiumManager;
+import core.payments.paddle.PaddleAPI;
 import core.util.SystemUtil;
 import mysql.RedisManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
+import syncserver.EventOut;
 import syncserver.SyncUtil;
 
 public class Console {
@@ -56,6 +61,23 @@ public class Console {
         tasks.put("reports_ban", this::onReportsBan);
         tasks.put("reports_unban", this::onReportsUnban);
         tasks.put("user", this::onUser);
+        tasks.put("gen_ult", this::onGenUlt);
+    }
+
+    private void onGenUlt(String[] args) throws ExecutionException, InterruptedException, IOException {
+        long userId = Long.parseLong(args[1]);
+        long planId = Long.parseLong(args[2]);
+        int quantity = args.length >= 4 ? Integer.parseInt(args[3]) : 1;
+        String[] prices = args.length >= 5 ? args[4].split(",") : new String[0];
+        String passthrough = ClusterConnectionManager.getFullyConnectedClusters().get(0)
+                .send(EventOut.PADDLE_PASSTHROUGH, Map.of("user_id", userId))
+                .thenApply(json -> json.getString("passthrough"))
+                .get();
+
+        String[] urlParts = PaddleAPI.generatePayLink(planId, quantity, prices, passthrough).split("/");
+        String lawlietUrl = "https://lawlietbot.xyz/premium/" + urlParts[urlParts.length - 1];
+        LOGGER.info("Payment link for userId: {}; planId: {}; quantity: {}; prices: {}; passthrough: {}\n###\n{}",
+                userId, planId, quantity, prices, passthrough, lawlietUrl);
     }
 
     private void onUser(String[] args) {
@@ -144,7 +166,7 @@ public class Console {
     }
 
     private void onClusters(String[] args) {
-        ClusterConnectionManager.getPublicClusters().forEach(cluster -> {
+        ClusterConnectionManager.getClusters().forEach(cluster -> {
             LOGGER.info(
                     "Cluster {}: {} ({} servers, shard {} - {})",
                     cluster.getClusterId(),

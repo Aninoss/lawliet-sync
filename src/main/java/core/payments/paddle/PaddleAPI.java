@@ -40,13 +40,42 @@ public class PaddleAPI {
     public static List<JSONObject> retrieveSubscriptions(long subId) throws IOException {
         ArrayList<JSONObject> subs = new ArrayList<>();
         JSONArray array = null;
-        for(int page = 1; array == null || array.length() >= 200; page++) {
+        for (int page = 1; array == null || array.length() >= 200; page++) {
             array = retrieveSubscriptions(subId, page, 5).getJSONArray("response");
             for (int i = 0; i < array.length(); i++) {
                 subs.add(array.getJSONObject(i));
             }
         }
         return Collections.unmodifiableList(subs);
+    }
+
+    public static String generatePayLink(long planId, int quantity, String[] prices, String passthrough) throws IOException {
+        FormBody.Builder formBodyBuilder = new FormBody.Builder()
+                .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
+                .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
+                .add("product_id", String.valueOf(planId))
+                .add("quantity", String.valueOf(quantity))
+                .add("passthrough", passthrough);
+
+        for (int i = 0; i < prices.length; i++) {
+            String price = prices[i];
+            formBodyBuilder.add("prices[" + i + "]", price)
+                    .add("recurring_prices[" + i + "]", price);
+        }
+
+        RequestBody formBody = formBodyBuilder.build();
+        Request request = new Request.Builder()
+                .url("https://vendors.paddle.com/api/2.0/product/generate_pay_link")
+                .post(formBody)
+                .addHeader("User-Agent", USER_AGENT)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            String body = response.body().string();
+            return new JSONObject(body)
+                    .getJSONObject("response")
+                    .getString("url");
+        }
     }
 
     private static JSONObject retrieveSubscriptions(long subId, int page, int counter) throws IOException {
@@ -57,7 +86,7 @@ public class PaddleAPI {
                 .add("state", "active,past_due,paused")
                 .add("page", String.valueOf(page));
         if (subId > 0) {
-            formBodyBuilder = formBodyBuilder.add("subscription_id", String.valueOf(subId));
+            formBodyBuilder.add("subscription_id", String.valueOf(subId));
         }
         RequestBody formBody = formBodyBuilder.build();
 

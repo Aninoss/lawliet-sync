@@ -6,6 +6,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import core.Program;
 import mysql.modules.paddlesubscriptions.DBPaddleSubscriptions;
 import mysql.modules.paddlesubscriptions.PaddleData;
 import org.json.JSONObject;
@@ -36,26 +37,28 @@ public class PaddleCache {
     }
 
     public static synchronized void reload(long subId) throws IOException {
-        modified = false;
-        Map<Long, PaddleData> paddleDBMap = DBPaddleSubscriptions.retrievePaddleSubscriptionMap();
-        List<JSONObject> subscriptions = subId > 0
-                ? PaddleAPI.retrieveSubscriptions(subId)
-                : PaddleAPI.retrieveSubscriptions();
+        if (Program.isProductionMode()) {
+            modified = false;
+            Map<Long, PaddleData> paddleDBMap = DBPaddleSubscriptions.retrievePaddleSubscriptionMap();
+            List<JSONObject> subscriptions = subId > 0
+                    ? PaddleAPI.retrieveSubscriptions(subId)
+                    : PaddleAPI.retrieveSubscriptions();
 
-        if (modified) {
-            LOGGER.info("Paddle load cancelled to prevent race condition");
-            return;
-        }
+            if (modified) {
+                LOGGER.info("Paddle load cancelled to prevent race condition");
+                return;
+            }
 
-        if (subId > 0) {
-            subscriptionMap.remove(subId);
-        } else {
-            subscriptionMap.clear();
-        }
-        for (JSONObject json : subscriptions) {
-            PaddleSubscription paddleSubscription = extractPaddleSubscription(paddleDBMap, json);
-            if (paddleSubscription != null) {
-                subscriptionMap.put(paddleSubscription.getSubId(), paddleSubscription);
+            if (subId > 0) {
+                subscriptionMap.remove(subId);
+            } else {
+                subscriptionMap.clear();
+            }
+            for (JSONObject json : subscriptions) {
+                PaddleSubscription paddleSubscription = extractPaddleSubscription(paddleDBMap, json);
+                if (paddleSubscription != null) {
+                    subscriptionMap.put(paddleSubscription.getSubId(), paddleSubscription);
+                }
             }
         }
 

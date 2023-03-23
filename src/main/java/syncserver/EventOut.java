@@ -13,6 +13,7 @@ public enum EventOut {
     PATREON,
     TOPGG,
     TOPGG_ANICORD,
-    FR_NOTIFICATION
+    FR_NOTIFICATION,
+    PADDLE_PASSTHROUGH
 
 }
