@@ -37,6 +37,10 @@ public class OnPaddle implements SyncServerFunction {
 
         if (jsonObject.has("preset_guilds")) {
             JSONArray presetGuilds = jsonObject.getJSONArray("preset_guilds");
+            while (presetGuilds.length() > paddleSubscription.getQuantity()) {
+                presetGuilds.remove(presetGuilds.length() - 1);
+            }
+
             int currentSlot = PremiumManager.retrieveUnlockServersNumber(userId) - presetGuilds.length();
             for (int i = 0; i < presetGuilds.length(); i++) {
                 long guildId = presetGuilds.getLong(i);
