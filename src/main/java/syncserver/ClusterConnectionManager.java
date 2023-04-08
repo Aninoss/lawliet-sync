@@ -179,6 +179,13 @@ public class ClusterConnectionManager {
                 .collect(Collectors.toList());
     }
 
+    public static List<Cluster> getCustomClusters() {
+        return clusterMap.values().stream()
+                .filter(c -> !c.isPublicCluster())
+                .sorted(Comparator.comparingInt(c -> Math.abs(c.getClusterId())))
+                .collect(Collectors.toList());
+    }
+
     public static List<Cluster> getFullyConnectedClusters() {
         return clusterMap.values().stream()
                 .filter(cluster -> cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED)

@@ -1,5 +1,6 @@
 package core;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,41 +26,21 @@ public class HealthScheduler {
         executor.scheduleAtFixedRate(() -> {
             StringBuilder sb = new StringBuilder("<t:")
                     .append(System.currentTimeMillis() / 1000)
-                    .append(":T>\n```diff\n | CL.  | STATUS\n----------------------------\n");
+                    .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
 
-            boolean containsCustomInstances = false;
-            for (Cluster cluster : ClusterConnectionManager.getClusters()) {
-                if (!cluster.isPublicCluster()) {
-                    containsCustomInstances = true;
-                } else if (containsCustomInstances) {
-                    containsCustomInstances = false;
-                    sb.append("----------------------------\n");
+            List<Cluster> customClusters = ClusterConnectionManager.getCustomClusters();
+            if (!customClusters.isEmpty()) {
+                for (Cluster cluster : customClusters) {
+                    String line = generateClusterLine(cluster);
+                    sb.append(line)
+                            .append('\n');
                 }
+                sb.append("----------------------------\n");
+            }
 
-                boolean green = cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED &&
-                        (cluster.getConnectedShards() < 0 || cluster.getConnectedShards() == 16);
-
-                StringBuilder line = new StringBuilder(green ? "+" : "-")
-                        .append("| ")
-                        .append(cluster.isPublicCluster() ? "" : "C-")
-                        .append(cluster.isPublicCluster() ? cluster.getClusterId() : (Math.abs(cluster.getClusterId()) - 1));
-
-                line.append(" ".repeat(7 - line.length()))
-                        .append(" | ");
-
-                switch (cluster.getConnectionStatus()) {
-                    case OFFLINE -> line.append("Offline");
-                    case BOOTING_UP -> line.append("Booting Up");
-                    case FULLY_CONNECTED -> line.append("Running");
-                }
-
-                if (cluster.getConnectedShards() >= 0) {
-                    line.append(" (")
-                            .append(cluster.getConnectedShards())
-                            .append("/16)");
-                }
-
-                line.append(" ".repeat(28 - line.length()));
+            List<Cluster> publicClusters = ClusterConnectionManager.getPublicClusters();
+            for (Cluster cluster : publicClusters) {
+                String line = generateClusterLine(cluster);
                 sb.append(line)
                         .append('\n');
             }
@@ -71,6 +52,34 @@ public class HealthScheduler {
                 LOGGER.error("Message edit error", e);
             }
         }, 30, Integer.parseInt(System.getenv("HEALTH_PERIOD")), TimeUnit.SECONDS);
+    }
+
+    private static String generateClusterLine(Cluster cluster) {
+        boolean green = cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED &&
+                (cluster.getConnectedShards() < 0 || cluster.getConnectedShards() == 16);
+
+        StringBuilder line = new StringBuilder(green ? "+" : "-")
+                .append("| ")
+                .append(cluster.isPublicCluster() ? "" : "C-")
+                .append(cluster.isPublicCluster() ? cluster.getClusterId() : (Math.abs(cluster.getClusterId()) - 1));
+
+        line.append(" ".repeat(7 - line.length()))
+                .append(" | ");
+
+        switch (cluster.getConnectionStatus()) {
+            case OFFLINE -> line.append("Offline");
+            case BOOTING_UP -> line.append("Booting Up");
+            case FULLY_CONNECTED -> line.append("Running");
+        }
+
+        if (cluster.getConnectedShards() >= 0) {
+            line.append(" (")
+                    .append(cluster.getConnectedShards())
+                    .append("/16)");
+        }
+
+        line.append(" ".repeat(28 - line.length()));
+        return line.toString();
     }
 
 }
