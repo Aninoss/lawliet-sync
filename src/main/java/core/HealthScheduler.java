@@ -72,7 +72,7 @@ public class HealthScheduler {
             case FULLY_CONNECTED -> line.append("Running");
         }
 
-        if (cluster.getConnectedShards() >= 0) {
+        if (cluster.getConnectedShards() >= 0 && cluster.getConnectionStatus() != Cluster.ConnectionStatus.OFFLINE) {
             line.append(" (")
                     .append(cluster.getConnectedShards())
                     .append("/16)");
