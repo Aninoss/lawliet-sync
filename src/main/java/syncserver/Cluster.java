@@ -29,6 +29,7 @@ public class Cluster {
     private Set<Long> serverIds = Collections.emptySet();
     private ConnectionStatus connectionStatus = ConnectionStatus.OFFLINE;
     private Long localServerSize = null;
+    int connectedShards = -1;
 
     private final LoadingCache<Long, Optional<String>> emojiCache = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -109,6 +110,14 @@ public class Cluster {
 
     public void setLocalServerSize(Long localServerSize) {
         this.localServerSize = localServerSize;
+    }
+
+    public int getConnectedShards() {
+        return connectedShards;
+    }
+
+    public void setConnectedShards(int connectedShards) {
+        this.connectedShards = connectedShards;
     }
 
     public Optional<String> fetchCustomEmojiTagById(long emojiId) {

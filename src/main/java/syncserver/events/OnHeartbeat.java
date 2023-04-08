@@ -39,7 +39,8 @@ public class OnHeartbeat implements SyncServerFunction {
 
         long totalServers;
         if (jsonObject.has("total_servers") && (totalServers = jsonObject.getLong("total_servers")) > 0L) {
-            ClusterConnectionManager.getCluster(clusterId).setLocalServerSize(totalServers);
+            ClusterConnectionManager.getCluster(clusterId)
+                    .setLocalServerSize(totalServers);
         }
 
         if (jsonObject.has("server_ids")) {
@@ -49,6 +50,11 @@ public class OnHeartbeat implements SyncServerFunction {
                 serverIds.add(serverIdsJsonArray.getLong(i));
             }
             ClusterConnectionManager.getCluster(clusterId).setServerIds(serverIds);
+        }
+
+        if (jsonObject.has("connected_shards")) {
+            ClusterConnectionManager.getCluster(clusterId)
+                    .setConnectedShards(jsonObject.getInt("connected_shards"));
         }
 
         return null;

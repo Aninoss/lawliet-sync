@@ -23,6 +23,7 @@ public class Main {
             StripeCache.startScheduler();
             PatreonCache.getInstance().fetch();
             EventManager.register();
+            HealthScheduler.run();
         } catch (Throwable e) {
             LOGGER.error("Error on startup", e);
             System.exit(1);

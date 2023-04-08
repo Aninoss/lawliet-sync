@@ -50,6 +50,7 @@ dependencies {
     implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-servlet:3.0.2'
     implementation 'org.glassfish.jersey.inject:jersey-hk2:3.0.2'
     implementation 'org.glassfish.hk2:hk2-metadata-generator:3.0.2'
+    implementation 'club.minnced:discord-webhooks:0.8.2'
 }
 
 application {

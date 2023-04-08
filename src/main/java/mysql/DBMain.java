@@ -36,7 +36,6 @@ public class DBMain implements DriverAction {
 
     public synchronized void connect() throws SQLException {
         if (connect == null) {
-            LOGGER.info("Connecting with database");
             final MysqlDataSource rv = new MysqlDataSource();
             rv.setServerName(System.getenv("DB_HOST"));
             rv.setPortNumber(Integer.parseInt(System.getenv("DB_PORT")));
@@ -49,6 +48,7 @@ public class DBMain implements DriverAction {
             rv.setServerTimezone(TimeZone.getDefault().getID());
             rv.setRewriteBatchedStatements(true);
             connect = rv.getConnection();
+            LOGGER.info("Database connection established");
         }
     }
 
