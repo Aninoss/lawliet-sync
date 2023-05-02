@@ -56,7 +56,7 @@ public class HealthScheduler {
 
     private static String generateClusterLine(Cluster cluster) {
         boolean green = cluster.getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED &&
-                (cluster.getConnectedShards() == -1 || cluster.getConnectedShards() == 16);
+                (cluster.getConnectedShards() == -1 || cluster.getConnectedShards() == 16 || !cluster.isPublicCluster());
 
         String clusterIdString = cluster.isPublicCluster()
                 ? String.valueOf(cluster.getClusterId())
@@ -74,7 +74,10 @@ public class HealthScheduler {
             case FULLY_CONNECTED -> line.append("Running");
         }
 
-        if (cluster.getConnectedShards() != -1 && cluster.getConnectionStatus() != Cluster.ConnectionStatus.OFFLINE) {
+        if (cluster.getConnectedShards() != -1 &&
+                cluster.getConnectionStatus() != Cluster.ConnectionStatus.OFFLINE &&
+                cluster.isPublicCluster()
+        ) {
             line.append(" (")
                     .append(cluster.getConnectedShards())
                     .append("/16)");
