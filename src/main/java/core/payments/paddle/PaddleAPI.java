@@ -49,7 +49,7 @@ public class PaddleAPI {
         return Collections.unmodifiableList(subs);
     }
 
-    public static String generatePayLink(long planId, int quantity, String[] prices, String passthrough) throws IOException {
+    public static String generatePayLink(long planId, int quantity, String[] prices, String[] recurringPrices, String passthrough) throws IOException {
         FormBody.Builder formBodyBuilder = new FormBody.Builder()
                 .add("vendor_id", System.getenv("PADDLE_VENDOR_ID"))
                 .add("vendor_auth_code", System.getenv("PADDLE_AUTH"))
@@ -58,9 +58,8 @@ public class PaddleAPI {
                 .add("passthrough", passthrough);
 
         for (int i = 0; i < prices.length; i++) {
-            String price = prices[i];
-            formBodyBuilder.add("prices[" + i + "]", price)
-                    .add("recurring_prices[" + i + "]", price);
+            formBodyBuilder.add("prices[" + i + "]", prices[i])
+                    .add("recurring_prices[" + i + "]", recurringPrices[i]);
         }
 
         RequestBody formBody = formBodyBuilder.build();

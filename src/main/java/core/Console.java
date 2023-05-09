@@ -69,15 +69,16 @@ public class Console {
         long planId = Long.parseLong(args[2]);
         int quantity = args.length >= 4 ? Integer.parseInt(args[3]) : 1;
         String[] prices = args.length >= 5 ? args[4].split(",") : new String[0];
+        String[] recurringPrices = args.length >= 6 ? args[5].split(",") : prices;
         String passthrough = ClusterConnectionManager.getFullyConnectedClusters().get(0)
                 .send(EventOut.PADDLE_PASSTHROUGH, Map.of("user_id", userId))
                 .thenApply(json -> json.getString("passthrough"))
                 .get();
 
-        String[] urlParts = PaddleAPI.generatePayLink(planId, quantity, prices, passthrough).split("/");
+        String[] urlParts = PaddleAPI.generatePayLink(planId, quantity, prices, recurringPrices, passthrough).split("/");
         String lawlietUrl = "https://lawlietbot.xyz/premium/" + urlParts[urlParts.length - 1];
-        LOGGER.info("Payment link for userId: {}; planId: {}; quantity: {}; prices: {}; passthrough: {}\n###\n{}",
-                userId, planId, quantity, prices, passthrough, lawlietUrl);
+        LOGGER.info("Payment link for userId: {}; planId: {}; quantity: {}; prices: {}; recurringPrices: {}; passthrough: {}\n###\n{}",
+                userId, planId, quantity, prices, recurringPrices, passthrough, lawlietUrl);
     }
 
     private void onUser(String[] args) {
