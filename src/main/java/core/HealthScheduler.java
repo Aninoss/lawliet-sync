@@ -24,33 +24,41 @@ public class HealthScheduler {
 
         executor.scheduleAtFixedRate(() -> {
             try {
-                StringBuilder sb = new StringBuilder("<t:")
-                        .append(System.currentTimeMillis() / 1000)
-                        .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
-
-                List<Cluster> customClusters = ClusterConnectionManager.getCustomClusters();
-                if (!customClusters.isEmpty()) {
-                    for (Cluster cluster : customClusters) {
-                        String line = generateClusterLine(cluster);
-                        sb.append(line)
-                                .append('\n');
-                    }
-                    sb.append("----------------------------\n");
-                }
-
-                List<Cluster> publicClusters = ClusterConnectionManager.getPublicClusters();
-                for (Cluster cluster : publicClusters) {
-                    String line = generateClusterLine(cluster);
-                    sb.append(line)
-                            .append('\n');
-                }
-
-                sb.append("```");
-                client.edit(System.getenv("HEALTH_MESSAGE_ID"), sb.toString()).get();
+                client.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).get();
+                client.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).get();
             } catch (Throwable e) {
                 LOGGER.error("Health report error", e);
             }
         }, 30, Integer.parseInt(System.getenv("HEALTH_PERIOD")), TimeUnit.SECONDS);
+    }
+
+    private static String generateClusterContent(int clusterIdMin, int clusterIdMax) {
+        StringBuilder sb = new StringBuilder("<t:")
+                .append(System.currentTimeMillis() / 1000)
+                .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
+
+        if (clusterIdMin < 1 && clusterIdMax < 1) {
+            List<Cluster> customClusters = ClusterConnectionManager.getCustomClusters();
+            for (Cluster cluster : customClusters) {
+                if (cluster.getClusterId() >= clusterIdMin && cluster.getClusterId() <= clusterIdMax) {
+                    String line = generateClusterLine(cluster);
+                    sb.append(line)
+                            .append('\n');
+                }
+            }
+        } else {
+            List<Cluster> publicClusters = ClusterConnectionManager.getPublicClusters();
+            for (Cluster cluster : publicClusters) {
+                if (cluster.getClusterId() >= clusterIdMin && cluster.getClusterId() <= clusterIdMax) {
+                    String line = generateClusterLine(cluster);
+                    sb.append(line)
+                            .append('\n');
+                }
+            }
+        }
+
+        sb.append("```");
+        return sb.toString();
     }
 
     private static String generateClusterLine(Cluster cluster) {
