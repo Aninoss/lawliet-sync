@@ -1,7 +1,6 @@
 package core;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -24,32 +23,32 @@ public class HealthScheduler {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.scheduleAtFixedRate(() -> {
-            StringBuilder sb = new StringBuilder("<t:")
-                    .append(System.currentTimeMillis() / 1000)
-                    .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
+            try {
+                StringBuilder sb = new StringBuilder("<t:")
+                        .append(System.currentTimeMillis() / 1000)
+                        .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
 
-            List<Cluster> customClusters = ClusterConnectionManager.getCustomClusters();
-            if (!customClusters.isEmpty()) {
-                for (Cluster cluster : customClusters) {
+                List<Cluster> customClusters = ClusterConnectionManager.getCustomClusters();
+                if (!customClusters.isEmpty()) {
+                    for (Cluster cluster : customClusters) {
+                        String line = generateClusterLine(cluster);
+                        sb.append(line)
+                                .append('\n');
+                    }
+                    sb.append("----------------------------\n");
+                }
+
+                List<Cluster> publicClusters = ClusterConnectionManager.getPublicClusters();
+                for (Cluster cluster : publicClusters) {
                     String line = generateClusterLine(cluster);
                     sb.append(line)
                             .append('\n');
                 }
-                sb.append("----------------------------\n");
-            }
 
-            List<Cluster> publicClusters = ClusterConnectionManager.getPublicClusters();
-            for (Cluster cluster : publicClusters) {
-                String line = generateClusterLine(cluster);
-                sb.append(line)
-                        .append('\n');
-            }
-
-            sb.append("```");
-            try {
+                sb.append("```");
                 client.edit(System.getenv("HEALTH_MESSAGE_ID"), sb.toString()).get();
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error("Message edit error", e);
+            } catch (Throwable e) {
+                LOGGER.error("Health report error", e);
             }
         }, 30, Integer.parseInt(System.getenv("HEALTH_PERIOD")), TimeUnit.SECONDS);
     }
