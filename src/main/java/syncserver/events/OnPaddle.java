@@ -81,7 +81,8 @@ public class OnPaddle implements SyncServerFunction {
                 json.getString("state"),
                 json.getString("total_price"),
                 LocalDate.parse(json.getString("next_payment")),
-                json.getString("update_url")
+                json.getString("update_url"),
+                json.getString("email")
         );
     }
 

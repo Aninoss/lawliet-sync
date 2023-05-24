@@ -32,6 +32,7 @@ public class OnPaddleSubscriptions implements SyncServerFunction {
             subJson.put("total_price", subscription.getTotalPrice());
             subJson.put("next_payment", subscription.getNextPayment());
             subJson.put("update_url", subscription.getUpdateUrl());
+            subJson.put("email", subscription.getEmail());
             subsJson.put(subJson);
         }
 
