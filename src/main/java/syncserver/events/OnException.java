@@ -10,6 +10,7 @@ import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessage;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import core.ExceptionLogger;
+import core.Program;
 import core.util.StringUtil;
 import org.json.JSONObject;
 import syncserver.ClusterConnectionManager;
@@ -29,6 +30,10 @@ public class OnException implements SyncServerFunction {
 
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
+        if (!Program.isProductionMode()) {
+            return null;
+        }
+
         cache.add(Instant.now());
         if (cache.size() > CACHE_SIZE) {
             if (cache.remove(0).plus(Duration.ofMinutes(CACHE_TIME_MINUTES)).isAfter(Instant.now()) &&
