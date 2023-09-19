@@ -1,14 +1,15 @@
 package core;
 
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import club.minnced.discord.webhook.WebhookClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
+
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class HealthScheduler {
 
@@ -24,8 +25,8 @@ public class HealthScheduler {
 
         executor.scheduleAtFixedRate(() -> {
             try {
-                client.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).get();
-                client.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).get();
+                client.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).exceptionally(ExceptionLogger.get());
+                client.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
             } catch (Throwable e) {
                 LOGGER.error("Health report error", e);
             }
