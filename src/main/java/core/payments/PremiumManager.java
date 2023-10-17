@@ -1,9 +1,5 @@
 package core.payments;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
 import com.stripe.model.Subscription;
 import core.Program;
 import core.payments.paddle.PaddleManager;
@@ -15,8 +11,16 @@ import mysql.modules.premium.DBPremium;
 import mysql.modules.premium.PremiumSlot;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 public class PremiumManager {
+    private final static Logger LOGGER = LoggerFactory.getLogger(PremiumManager.class);
 
     public static boolean userIsPremium(long userId) {
         return !Program.isProductionMode() ||
@@ -73,6 +77,11 @@ public class PremiumManager {
         }
 
         patreonTiers.forEach((userId, tier) -> {
+            if (tier == null) {
+                LOGGER.warn("Skipping user id {} due to empty tier", userId);
+                return;
+            }
+
             JSONObject userJson = new JSONObject();
             userJson.put("user_id", userId);
             userJson.put("tier", tier);

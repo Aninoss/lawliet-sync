@@ -1,8 +1,5 @@
 package core.payments;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import core.Program;
 import core.SingleCache;
 import core.internet.HttpProperty;
@@ -13,6 +10,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
 
@@ -91,7 +92,12 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
                     String id = slotJson.getString("id");
                     if (patreonTiers.containsKey(id) && !socialConnectionsJson.isNull("discord")) {
                         long discordUserId = Long.parseLong(socialConnectionsJson.getJSONObject("discord").getString("user_id"));
-                        userTiers.put(discordUserId, patreonTiers.get(id));
+                        Integer tier = patreonTiers.get(id);
+                        if (tier != null) {
+                            userTiers.put(discordUserId, patreonTiers.get(id));
+                        } else {
+                            LOGGER.warn("Empty tier for user id {}", discordUserId);
+                        }
                     }
                 }
             }
@@ -108,9 +114,14 @@ public class PatreonCache extends SingleCache<HashMap<Long, Integer>> {
             if (!attributesJson.isNull("patron_status") && attributesJson.getString("patron_status").equals("active_patron")) {
                 JSONArray entitledTiers = relationshipsJson.getJSONObject("currently_entitled_tiers").getJSONArray("data");
                 String id = relationshipsJson.getJSONObject("user").getJSONObject("data").getString("id");
-                if (entitledTiers.length() > 0) {
+                if (!entitledTiers.isEmpty()) {
                     String tierId = entitledTiers.getJSONObject(0).getString("id");
-                    patreonTiers.put(id, TIER_MAP.get(tierId));
+                    Integer tier = TIER_MAP.get(tierId);
+                    if (tier != null) {
+                        patreonTiers.put(id, tier);
+                    } else {
+                        LOGGER.warn("Empty tier for tier id {}", id);
+                    }
                 } else {
                     int entitledCents = attributesJson.getInt("currently_entitled_amount_cents");
                     int pledgeCadence = attributesJson.getInt("pledge_cadence");
