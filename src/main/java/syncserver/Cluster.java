@@ -1,10 +1,5 @@
 package syncserver;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -13,6 +8,15 @@ import okhttp3.*;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class Cluster {
 
@@ -90,7 +94,7 @@ public class Cluster {
 
     public int getShardIntervalMin() {
         if (Program.isProductionMode() && isPublicCluster()) {
-            return (clusterId - 1) * 16;
+            return (clusterId - 1) * ClusterConnectionManager.getShardsPerCluster();
         } else {
             return 0;
         }
@@ -98,7 +102,8 @@ public class Cluster {
 
     public int getShardIntervalMax() {
         if (Program.isProductionMode() && isPublicCluster()) {
-            return (clusterId - 1) * 16 + 15;
+            int shardsPerCluster = ClusterConnectionManager.getShardsPerCluster();
+            return (clusterId - 1) * shardsPerCluster + (shardsPerCluster - 1);
         } else {
             return 0;
         }
@@ -114,6 +119,10 @@ public class Cluster {
 
     public int getConnectedShards() {
         return connectedShards;
+    }
+
+    public boolean getAllShardsConnected() {
+        return connectedShards == ClusterConnectionManager.getShardsPerCluster();
     }
 
     public void setConnectedShards(int connectedShards) {

@@ -1,11 +1,5 @@
 package core;
 
-import java.io.IOException;
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 import core.payments.PatreonCache;
 import core.payments.PremiumManager;
 import core.payments.paddle.PaddleAPI;
@@ -17,6 +11,13 @@ import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 import syncserver.EventOut;
 import syncserver.SyncUtil;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 
 public class Console {
 
@@ -180,7 +181,7 @@ public class Console {
     }
 
     private void onShards(String[] args) {
-        LOGGER.info("Total shards: {}", ClusterConnectionManager.getTotalShards().orElse(0));
+        LOGGER.info("Total shards: {}", ClusterConnectionManager.getTotalShards());
     }
 
     private void onStart(String[] args) {

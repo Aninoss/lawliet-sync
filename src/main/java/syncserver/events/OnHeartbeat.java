@@ -1,12 +1,13 @@
 package syncserver.events;
 
-import java.util.HashSet;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
+
+import java.util.HashSet;
 
 @SyncServerEvent(event = "HEARTBEAT")
 public class OnHeartbeat implements SyncServerFunction {
@@ -19,7 +20,6 @@ public class OnHeartbeat implements SyncServerFunction {
             if (alreadyConnected) {
                 ClusterConnectionManager.registerConnectedCluster(
                         clusterId,
-                        jsonObject.getInt("total_shards"),
                         ip
                 );
             } else {
@@ -29,7 +29,6 @@ public class OnHeartbeat implements SyncServerFunction {
             if (alreadyConnected) {
                 ClusterConnectionManager.clusterSetFullyConnected(
                         clusterId,
-                        jsonObject.getInt("total_shards"),
                         ip
                 );
             } else if (ClusterConnectionManager.getCluster(clusterId).getConnectionStatus() == Cluster.ConnectionStatus.FULLY_CONNECTED) {

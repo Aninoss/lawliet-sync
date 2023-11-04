@@ -1,14 +1,14 @@
 package syncserver;
 
+import core.ExceptionLogger;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import core.ExceptionLogger;
-import core.Program;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ClusterConnectionManager {
 
@@ -17,8 +17,6 @@ public class ClusterConnectionManager {
 
     private static final HashMap<Integer, Cluster> clusterMap = new HashMap<>();
     private static final ExecutorService connectorService = Executors.newSingleThreadExecutor();
-    private static final ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-    private static Integer totalShards = null;
     private static final HashMap<Integer, Instant> clusterCache = new HashMap<>();
 
     static {
@@ -32,18 +30,27 @@ public class ClusterConnectionManager {
         }, 1, 1, TimeUnit.SECONDS);
     }
 
+    public static int getShardsPerCluster() {
+        return Integer.parseInt(System.getenv("SHARDS_PER_CLUSTER"));
+    }
+
+    public static int getTotalClusters() {
+        return Integer.parseInt(System.getenv("TOTAL_CLUSTERS"));
+    }
+
+    public static int getTotalShards() {
+        return getShardsPerCluster() * getTotalClusters();
+    }
+
     public static boolean heartbeat(int clusterId) {
         return clusterCache.put(clusterId, Instant.now()) == null;
     }
 
-    public static synchronized void clusterSetFullyConnected(int clusterId, int totalShards, String ip) {
+    public static synchronized void clusterSetFullyConnected(int clusterId, String ip) {
         Cluster cluster = clusterMap.computeIfAbsent(clusterId, cId -> new Cluster(clusterId, ip));
         if (cluster.getConnectionStatus() != Cluster.ConnectionStatus.FULLY_CONNECTED) {
             LOGGER.info("Cluster {} is fully connected", clusterId);
             cluster.setConnectionStatus(Cluster.ConnectionStatus.FULLY_CONNECTED);
-            if (cluster.isPublicCluster() && ClusterConnectionManager.totalShards == null) {
-                ClusterConnectionManager.totalShards = totalShards;
-            }
         }
     }
 
@@ -56,9 +63,9 @@ public class ClusterConnectionManager {
         }
     }
 
-    public static synchronized void registerConnectedCluster(int clusterId, int totalShards, String ip) {
+    public static synchronized void registerConnectedCluster(int clusterId, String ip) {
         LOGGER.info("Adding connected cluster with id: {}, alreadyPresent: {}", clusterId, clusterMap.containsKey(clusterId));
-        clusterSetFullyConnected(clusterId, totalShards, ip);
+        clusterSetFullyConnected(clusterId, ip);
     }
 
     public static void unregister(int clusterId) {
@@ -71,12 +78,7 @@ public class ClusterConnectionManager {
 
     public static void start() {
         List<Cluster> clusters = getPublicClusters();
-        int totalShards = Program.isProductionMode() ? clusters.size() * 16 : 1;
-        if (ClusterConnectionManager.totalShards != null && ClusterConnectionManager.totalShards != totalShards) {
-            LOGGER.info("Shard size has changed");
-        }
-        ClusterConnectionManager.totalShards = totalShards;
-        LOGGER.info("Starting clusters with total shard size of {}", totalShards);
+        LOGGER.info("Starting clusters with total shard size of {}", getTotalShards());
 
         for (Cluster cluster : clusters) {
             LOGGER.info("Cluster {} uses shards {} to {}", cluster.getClusterId(), cluster.getShardIntervalMin(), cluster.getShardIntervalMax());
@@ -85,17 +87,13 @@ public class ClusterConnectionManager {
     }
 
     public static void submitConnectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) {
-        if (totalShards != null) {
-            connectorService.submit(() -> {
-                try {
-                    connectCluster(cluster, allowReconnect, sendBlockShards);
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            });
-        } else {
-            scheduledExecutor.schedule(() -> submitConnectCluster(cluster, allowReconnect, sendBlockShards), 1, TimeUnit.SECONDS);
-        }
+        connectorService.submit(() -> {
+            try {
+                connectCluster(cluster, allowReconnect, sendBlockShards);
+            } catch (InterruptedException e) {
+                //ignore
+            }
+        });
     }
 
     private static void connectCluster(Cluster cluster, boolean allowReconnect, boolean sendBlockShards) throws InterruptedException {
@@ -118,7 +116,7 @@ public class ClusterConnectionManager {
                         .filter(c -> c.getClusterId() > cluster.getClusterId())
                         .forEach(c -> {
                             JSONObject dataJson = new JSONObject();
-                            dataJson.put("total_shards", totalShards);
+                            dataJson.put("total_shards", getTotalShards());
                             dataJson.put("shards_min", cluster.getShardIntervalMin());
                             dataJson.put("shards_max", cluster.getShardIntervalMax());
                             c.send(EventOut.BLOCK_SHARDS, dataJson).exceptionally(ExceptionLogger.get());
@@ -131,7 +129,7 @@ public class ClusterConnectionManager {
                     JSONObject dataJson = new JSONObject();
                     dataJson.put("shard_min", cluster.getShardIntervalMin());
                     dataJson.put("shard_max", cluster.getShardIntervalMax());
-                    dataJson.put("total_shards", totalShards);
+                    dataJson.put("total_shards", getTotalShards());
                     cluster.send(EventOut.START_CONNECTION, dataJson).get(1, TimeUnit.SECONDS);
                     break;
                 } catch (ExecutionException | TimeoutException e) {
@@ -144,10 +142,6 @@ public class ClusterConnectionManager {
                 Thread.sleep(100);
             }
         }
-    }
-
-    public static Optional<Integer> getTotalShards() {
-        return Optional.ofNullable(totalShards);
     }
 
     public static Optional<Long> getGlobalServerSize() {
@@ -224,7 +218,7 @@ public class ClusterConnectionManager {
     }
 
     public static int getResponsibleShard(long serverId) {
-        return Math.abs((int) ((serverId >> 22) % totalShards));
+        return Math.abs((int) ((serverId >> 22) % getTotalShards()));
     }
 
 }
