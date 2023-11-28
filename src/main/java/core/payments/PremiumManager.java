@@ -25,16 +25,16 @@ public class PremiumManager {
     public static boolean userIsPremium(long userId) {
         return !Program.isProductionMode() ||
                 PatreonCache.getInstance().getUserTier(userId) > 0 ||
-                StripeManager.retrieveActiveSubscriptions(userId).size() > 0 ||
-                PaddleManager.retrieveActiveSubscriptionsByUserId(userId).size() > 0;
+                !StripeManager.retrieveActiveSubscriptions(userId).isEmpty() ||
+                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty();
     }
 
     public static int retrieveBoostsTotal(long userId) {
         int patreonBoosts = PatreonCache.getInstance().getUserTier(userId) - 1;
         int stripeBoosts = 0;
-        if (StripeManager.retrieveActiveSubscriptions(userId).size() > 0) {
+        if (!StripeManager.retrieveActiveSubscriptions(userId).isEmpty()) {
             stripeBoosts = 2;
-        } else if (PaddleManager.retrieveActiveSubscriptionsByUserId(userId).size() > 0) {
+        } else if (!PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()) {
             stripeBoosts = 2;
         }
         return 1 + Math.max(patreonBoosts, stripeBoosts);

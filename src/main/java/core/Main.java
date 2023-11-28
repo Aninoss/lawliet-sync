@@ -8,6 +8,7 @@ import mysql.DBMain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.EventManager;
+import syncserver.HeartbeatSender;
 
 public class Main {
 
@@ -24,6 +25,7 @@ public class Main {
             PatreonCache.getInstance().fetch();
             EventManager.register();
             HealthScheduler.run();
+            HeartbeatSender.start();
         } catch (Throwable e) {
             LOGGER.error("Error on startup", e);
             System.exit(1);

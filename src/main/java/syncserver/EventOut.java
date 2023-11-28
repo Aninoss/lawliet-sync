@@ -14,6 +14,7 @@ public enum EventOut {
     TOPGG,
     TOPGG_ANICORD,
     FR_NOTIFICATION,
-    PADDLE_PASSTHROUGH
+    PADDLE_PASSTHROUGH,
+    HEARTBEAT
 
 }
