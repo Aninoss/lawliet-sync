@@ -202,7 +202,7 @@ public class ClusterConnectionManager {
 
     public static Cluster getResponsibleCluster(long serverId) {
         for (Cluster cluster : clusterMap.values()) {
-            if (!cluster.isPublicCluster() && cluster.getServerIds().contains(serverId)) {
+            if (!cluster.isPublicCluster() && cluster.getConnectionStatus() != Cluster.ConnectionStatus.OFFLINE && cluster.getServerIds().contains(serverId)) {
                 return cluster;
             }
         }
