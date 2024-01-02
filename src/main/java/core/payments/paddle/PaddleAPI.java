@@ -1,16 +1,17 @@
 package core.payments.paddle;
 
+import okhttp3.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import okhttp3.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class PaddleAPI {
 
@@ -64,7 +65,7 @@ public class PaddleAPI {
 
         RequestBody formBody = formBodyBuilder.build();
         Request request = new Request.Builder()
-                .url("https://vendors.paddle.com/api/2.0/product/generate_pay_link")
+                .url("https://" + System.getenv("PADDLE_SUBDOMAIN_PREFIX") + "vendors.paddle.com/api/2.0/product/generate_pay_link")
                 .post(formBody)
                 .addHeader("User-Agent", USER_AGENT)
                 .build();
@@ -90,7 +91,7 @@ public class PaddleAPI {
         RequestBody formBody = formBodyBuilder.build();
 
         Request request = new Request.Builder()
-                .url("https://vendors.paddle.com/api/2.0/subscription/users")
+                .url("https://" + System.getenv("PADDLE_SUBDOMAIN_PREFIX") + "vendors.paddle.com/api/2.0/subscription/users")
                 .post(formBody)
                 .addHeader("User-Agent", USER_AGENT)
                 .build();
