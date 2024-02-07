@@ -1,9 +1,5 @@
 package syncserver.events;
 
-import java.awt.*;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
@@ -17,6 +13,11 @@ import syncserver.ClusterConnectionManager;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
 
+import java.awt.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+
 @SyncServerEvent(event = "EXCEPTION")
 public class OnException implements SyncServerFunction {
 
@@ -29,7 +30,7 @@ public class OnException implements SyncServerFunction {
     private Instant blockUntil = Instant.now();
 
     @Override
-    public JSONObject apply(int clusterId, JSONObject jsonObject) {
+    public synchronized JSONObject apply(int clusterId, JSONObject jsonObject) {
         if (!Program.isProductionMode()) {
             return null;
         }
