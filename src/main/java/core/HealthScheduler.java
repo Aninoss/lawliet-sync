@@ -20,13 +20,15 @@ public class HealthScheduler {
             return;
         }
 
-        WebhookClient client = WebhookClient.withUrl(System.getenv("HEALTH_WEBHOOK_URL"));
+        WebhookClient publicClient = WebhookClient.withUrl(System.getenv("PUBLIC_HEALTH_WEBHOOK_URL"));
+        WebhookClient privateClient = WebhookClient.withUrl(System.getenv("HEALTH_WEBHOOK_URL"));
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.scheduleAtFixedRate(() -> {
             try {
-                client.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).exceptionally(ExceptionLogger.get());
-                client.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
+                publicClient.edit(System.getenv("PUBLIC_HEALTH_MESSAGE_ID"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
+                privateClient.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).exceptionally(ExceptionLogger.get());
+                privateClient.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
             } catch (Throwable e) {
                 LOGGER.error("Health report error", e);
             }
@@ -34,7 +36,7 @@ public class HealthScheduler {
     }
 
     private static String generateClusterContent(int clusterIdMin, int clusterIdMax) {
-        StringBuilder sb = new StringBuilder("<t:")
+        StringBuilder sb = new StringBuilder("Last Refresh: <t:")
                 .append(System.currentTimeMillis() / 1000)
                 .append(":T>\n```diff\n | CL.  | STATUS (SHARDS)\n----------------------------\n");
 
