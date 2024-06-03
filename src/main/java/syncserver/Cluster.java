@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +36,7 @@ public class Cluster {
     private ConnectionStatus connectionStatus = ConnectionStatus.OFFLINE;
     private Long localServerSize = null;
     int connectedShards = -1;
+    private Instant offlineNotificationTime = null;
 
     private final LoadingCache<Long, Optional<String>> emojiCache = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -65,6 +68,11 @@ public class Cluster {
     }
 
     public void setConnectionStatus(ConnectionStatus connectionStatus) {
+        if (connectionStatus == ConnectionStatus.OFFLINE) {
+            this.offlineNotificationTime = Instant.now().plus(Duration.ofMinutes(10));
+        } else {
+            this.offlineNotificationTime = null;
+        }
         this.connectionStatus = connectionStatus;
     }
 
@@ -127,6 +135,14 @@ public class Cluster {
 
     public void setConnectedShards(int connectedShards) {
         this.connectedShards = connectedShards;
+    }
+
+    public boolean checkOfflineNotification() {
+        if (offlineNotificationTime != null && Instant.now().isAfter(offlineNotificationTime)) {
+            offlineNotificationTime = null;
+            return true;
+        }
+        return false;
     }
 
     public Optional<String> fetchCustomEmojiTagById(long emojiId) {

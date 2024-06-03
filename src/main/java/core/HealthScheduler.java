@@ -1,19 +1,26 @@
 package core;
 
 import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookEmbed;
+import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
+import club.minnced.discord.webhook.send.WebhookMessage;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import syncserver.Cluster;
 import syncserver.ClusterConnectionManager;
 
+import java.awt.*;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class HealthScheduler {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HealthScheduler.class);
+    private static final WebhookClient exceptionClient = WebhookClient.withUrl(System.getenv("EXCEPTION_WEBHOOK_URL"));
 
     public static void run() {
         if (!Program.isProductionMode()) {
@@ -29,6 +36,7 @@ public class HealthScheduler {
                 publicClient.edit(System.getenv("PUBLIC_HEALTH_MESSAGE_ID"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
                 privateClient.edit(System.getenv("HEALTH_MESSAGE_ID"), generateClusterContent(Integer.MIN_VALUE, -2)).exceptionally(ExceptionLogger.get());
                 privateClient.edit(System.getenv("HEALTH_MESSAGE_ID_2"), generateClusterContent(1, Integer.MAX_VALUE)).exceptionally(ExceptionLogger.get());
+                processOfflineNotifications();
             } catch (Throwable e) {
                 LOGGER.error("Health report error", e);
             }
@@ -97,6 +105,36 @@ public class HealthScheduler {
 
         line.append(" ".repeat(28 - line.length()));
         return line.toString();
+    }
+
+    private static void processOfflineNotifications() {
+        List<Integer> offlineClusterIds = ClusterConnectionManager.getPublicClusters().stream()
+                .filter(Cluster::checkOfflineNotification)
+                .map(Cluster::getClusterId)
+                .collect(Collectors.toList());
+        if (offlineClusterIds.isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("Clusters are offline: ");
+        for (int i = 0; i < offlineClusterIds.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(offlineClusterIds.get(i));
+        }
+
+        WebhookEmbed webhookEmbed = new WebhookEmbedBuilder()
+                .setTitle(new WebhookEmbed.EmbedTitle("Offline", null))
+                .setDescription(sb.toString())
+                .setColor(Color.RED.getRGB())
+                .build();
+        WebhookMessage webhookMessage = new WebhookMessageBuilder()
+                .setContent("<@" + ClusterConnectionManager.OWNER_ID + ">")
+                .addEmbeds(webhookEmbed)
+                .build();
+        exceptionClient.send(webhookMessage)
+                .exceptionally(ExceptionLogger.get());
     }
 
 }
