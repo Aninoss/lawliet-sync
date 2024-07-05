@@ -48,6 +48,7 @@ public class OnFRFetch implements SyncServerFunction {
             });
         }
 
+        responseJSON.put("completed", DBFeatureRequests.fetchEntries(userId, FRPanelType.COMPLETED).size());
         responseJSON.put("data", jsonEntriesArray);
         return responseJSON;
     }

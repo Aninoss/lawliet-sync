@@ -2,6 +2,6 @@ package mysql.modules.featurerequests;
 
 public enum FRPanelType {
 
-    PENDING, REJECTED
+    PENDING, REJECTED, COMPLETED
 
 }
