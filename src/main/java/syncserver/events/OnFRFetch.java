@@ -1,7 +1,6 @@
 package syncserver.events;
 
 import core.payments.PremiumManager;
-import mysql.modules.bannedusers.DBBannedUsers;
 import mysql.modules.featurerequests.DBFeatureRequests;
 import mysql.modules.featurerequests.FRPanelType;
 import org.json.JSONArray;
@@ -54,16 +53,10 @@ public class OnFRFetch implements SyncServerFunction {
     }
 
     public static int getBoostsTotal(long userId) {
-        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
-            return 0;
-        }
         return PremiumManager.retrieveBoostsTotal(userId);
     }
 
     public static int getBoostsUsed(long userId) {
-        if (DBBannedUsers.getInstance().getBean().getUserIds().contains(userId)) {
-            return 0;
-        }
         return DBFeatureRequests.fetchBoostsThisWeek(userId);
     }
 

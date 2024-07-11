@@ -5,6 +5,8 @@ import core.Program;
 import core.payments.paddle.PaddleManager;
 import core.payments.paddle.PaddleSubscription;
 import core.payments.stripe.StripeManager;
+import hibernate.HibernateManager;
+import hibernate.entities.PremiumCodeEntity;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.patreon.PatreonBean;
 import mysql.modules.premium.DBPremium;
@@ -14,19 +16,28 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import javax.persistence.EntityManager;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class PremiumManager {
     private final static Logger LOGGER = LoggerFactory.getLogger(PremiumManager.class);
 
     public static boolean userIsPremium(long userId) {
-        return !Program.isProductionMode() ||
+        if (!Program.isProductionMode() ||
                 PatreonCache.getInstance().getUserTier(userId) > 0 ||
                 !StripeManager.retrieveActiveSubscriptions(userId).isEmpty() ||
-                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty();
+                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()
+        ) {
+            return true;
+        }
+
+        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        try {
+            return !PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty();
+        } finally {
+            entityManager.close();
+        }
     }
 
     public static int retrieveBoostsTotal(long userId) {
@@ -36,22 +47,44 @@ public class PremiumManager {
             stripeBoosts = 2;
         } else if (!PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()) {
             stripeBoosts = 2;
+        } else {
+            EntityManager entityManager = HibernateManager.creasteEntityManager();
+            try {
+                if (!PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty()) {
+                    stripeBoosts = 2;
+                }
+            } finally {
+                entityManager.close();
+            }
         }
         return 1 + Math.max(patreonBoosts, stripeBoosts);
     }
 
     public static int retrieveUnlockServersNumber(long userId) {
         int n = tierToPremiumSlotNumber(PatreonCache.getInstance().getUserTier(userId));
+
         for (Subscription subscription : StripeManager.retrieveActiveSubscriptions(userId)) {
             Map<String, String> metadata = subscription.getMetadata();
             if (subscription.getMetadata().containsKey("unlock_servers") && Boolean.parseBoolean(metadata.get("unlock_servers"))) {
                 n += subscription.getItems().getData().get(0).getQuantity();
             }
         }
+
         for (PaddleSubscription subscription : PaddleManager.retrieveActiveSubscriptionsByUserId(userId)) {
             if (subscription.unlocksServer()) {
                 n += subscription.getQuantity();
             }
+        }
+
+        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        try {
+            for (PremiumCodeEntity premiumCodeEntity : PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId)) {
+                if (premiumCodeEntity.getPlan() == PremiumCodeEntity.Plan.PRO) {
+                    n++;
+                }
+            }
+        } finally {
+            entityManager.close();
         }
 
         return n;
@@ -74,6 +107,19 @@ public class PremiumManager {
         Map<Long, ArrayList<PaddleSubscription>> paddleMap = PaddleManager.retrieveActiveSubscriptions();
         for (long userId : paddleMap.keySet()) {
             patreonTiers.putIfAbsent(userId, 2);
+        }
+
+        Map<Long, List<PremiumCodeEntity>> codesMap;
+        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        try {
+            List<PremiumCodeEntity> premiumCodeEntities = PremiumCodeEntity.findAllActive(entityManager);
+            codesMap = premiumCodeEntities.stream()
+                    .collect(Collectors.groupingBy(PremiumCodeEntity::getRedeemedByUserId));
+            for (PremiumCodeEntity premiumCodeEntity : premiumCodeEntities) {
+                patreonTiers.putIfAbsent(premiumCodeEntity.getRedeemedByUserId(), 2);
+            }
+        } finally {
+            entityManager.close();
         }
 
         patreonTiers.forEach((userId, tier) -> {
@@ -99,6 +145,11 @@ public class PremiumManager {
                         .filter(PaddleSubscription::unlocksServer)
                         .mapToInt(PaddleSubscription::getQuantity)
                         .sum();
+            }
+            if (codesMap.containsKey(userId)) {
+                slots += (int) codesMap.get(userId).stream()
+                        .filter(code -> code.getPlan() == PremiumCodeEntity.Plan.PRO)
+                        .count();
             }
             ArrayList<PremiumSlot> slotList = userSlotMap.get(userId);
             if (slotList != null) {

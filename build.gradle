@@ -31,6 +31,7 @@ dependencies {
     implementation 'redis.clients:jedis:3.6.0'
     implementation 'com.stripe:stripe-java:20.85.0'
     implementation 'com.squareup.okhttp3:okhttp:4.9.2'
+    implementation 'org.hibernate.ogm:hibernate-ogm-mongodb:5.4.1.Final'
 
     implementation 'com.fasterxml.jackson.module:jackson-module-parameter-names:2.12.5'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.12.5'
