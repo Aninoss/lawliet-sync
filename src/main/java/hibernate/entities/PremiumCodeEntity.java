@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 @Entity(name = "PremiumCode")
 public class PremiumCodeEntity {
 
-    public enum Plan { BASIC, PRO }
+    public enum Level { BASIC, PRO }
 
     @Id
     private String code;
 
     @Enumerated(EnumType.STRING)
-    private Plan plan;
+    private Level level;
 
     private int durationDays;
     private long boughtByUserId;
@@ -32,9 +32,9 @@ public class PremiumCodeEntity {
     public PremiumCodeEntity() {
     }
 
-    public PremiumCodeEntity(String code, Plan plan, int durationDays, long boughtByUserId) {
+    public PremiumCodeEntity(String code, Level level, int durationDays, long boughtByUserId) {
         this.code = code;
-        this.plan = plan;
+        this.level = level;
         this.durationDays = durationDays;
         this.boughtByUserId = boughtByUserId;
     }
@@ -47,12 +47,12 @@ public class PremiumCodeEntity {
         this.code = code;
     }
 
-    public Plan getPlan() {
-        return plan;
+    public Level getLevel() {
+        return level;
     }
 
-    public void setPlan(Plan plan) {
-        this.plan = plan;
+    public void setLevel(Level level) {
+        this.level = level;
     }
 
     public int getDurationDays() {
@@ -105,6 +105,12 @@ public class PremiumCodeEntity {
 
     public static List<PremiumCodeEntity> findAllBoughtByUserId(EntityManager entityManager, long userId) {
         return entityManager.createQuery("FROM PremiumCode WHERE boughtByUserId = :userId", PremiumCodeEntity.class)
+                .setParameter("userId", userId)
+                .getResultList();
+    }
+
+    public static List<PremiumCodeEntity> findAllRedeemedByUserId(EntityManager entityManager, long userId) {
+        return entityManager.createQuery("FROM PremiumCode WHERE redeemedByUserId = :userId", PremiumCodeEntity.class)
                 .setParameter("userId", userId)
                 .getResultList();
     }

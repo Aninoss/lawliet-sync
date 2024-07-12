@@ -17,7 +17,7 @@ public class OnGetPremiumCode implements SyncServerFunction {
         HibernateManager.run(entityManager -> {
             PremiumCodeEntity premiumCodeEntity = entityManager.find(PremiumCodeEntity.class, code);
             if (premiumCodeEntity != null && !premiumCodeEntity.isRedeemed()) {
-                responseJson.put("plan", premiumCodeEntity.getPlan().name());
+                responseJson.put("level", premiumCodeEntity.getLevel().name());
                 responseJson.put("durationDays", premiumCodeEntity.getDurationDays());
                 responseJson.put("found", true);
             }

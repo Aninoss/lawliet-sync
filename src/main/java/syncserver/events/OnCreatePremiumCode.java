@@ -13,14 +13,14 @@ public class OnCreatePremiumCode implements SyncServerFunction {
     @Override
     public JSONObject apply(int clusterId, JSONObject jsonObject) {
         long userId = jsonObject.getLong("user_id");
-        PremiumCodeEntity.Plan plan = PremiumCodeEntity.Plan.valueOf(jsonObject.getString("plan"));
+        PremiumCodeEntity.Level level = PremiumCodeEntity.Level.valueOf(jsonObject.getString("level"));
         int days = jsonObject.getInt("days");
         int quantity = jsonObject.getInt("quantity");
 
         HibernateManager.run(entityManager -> {
             entityManager.getTransaction().begin();
             for (int i = 0; i < quantity; i++) {
-                PremiumCodeEntity premiumCodeEntity = new PremiumCodeEntity(StringUtil.generateRandomString(20), plan, days, userId);
+                PremiumCodeEntity premiumCodeEntity = new PremiumCodeEntity(StringUtil.generateRandomString(20), level, days, userId);
                 entityManager.persist(premiumCodeEntity);
             }
             entityManager.getTransaction().commit();

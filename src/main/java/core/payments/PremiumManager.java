@@ -79,7 +79,7 @@ public class PremiumManager {
         EntityManager entityManager = HibernateManager.creasteEntityManager();
         try {
             for (PremiumCodeEntity premiumCodeEntity : PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId)) {
-                if (premiumCodeEntity.getPlan() == PremiumCodeEntity.Plan.PRO) {
+                if (premiumCodeEntity.getLevel() == PremiumCodeEntity.Level.PRO) {
                     n++;
                 }
             }
@@ -148,7 +148,7 @@ public class PremiumManager {
             }
             if (codesMap.containsKey(userId)) {
                 slots += (int) codesMap.get(userId).stream()
-                        .filter(code -> code.getPlan() == PremiumCodeEntity.Plan.PRO)
+                        .filter(code -> code.getLevel() == PremiumCodeEntity.Level.PRO)
                         .count();
             }
             ArrayList<PremiumSlot> slotList = userSlotMap.get(userId);
