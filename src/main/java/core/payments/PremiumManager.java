@@ -5,7 +5,9 @@ import core.Program;
 import core.payments.paddle.PaddleManager;
 import core.payments.paddle.PaddleSubscription;
 import core.payments.stripe.StripeManager;
+import hibernate.Database;
 import hibernate.HibernateManager;
+import hibernate.entities.DiscordSubscriptionEntity;
 import hibernate.entities.PremiumCodeEntity;
 import mysql.modules.patreon.DBPatreon;
 import mysql.modules.patreon.PatreonBean;
@@ -32,7 +34,7 @@ public class PremiumManager {
             return true;
         }
 
-        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        EntityManager entityManager = HibernateManager.creasteEntityManager(Database.WEB);
         try {
             return !PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty();
         } finally {
@@ -41,23 +43,20 @@ public class PremiumManager {
     }
 
     public static int retrieveBoostsTotal(long userId) {
-        int patreonBoosts = PatreonCache.getInstance().getUserTier(userId) - 1;
-        int stripeBoosts = 0;
-        if (!StripeManager.retrieveActiveSubscriptions(userId).isEmpty()) {
-            stripeBoosts = 2;
-        } else if (!PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()) {
-            stripeBoosts = 2;
-        } else {
-            EntityManager entityManager = HibernateManager.creasteEntityManager();
-            try {
-                if (!PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty()) {
-                    stripeBoosts = 2;
-                }
-            } finally {
-                entityManager.close();
-            }
+        int patreonBoosts = PatreonCache.getInstance().getUserTier(userId);
+        if (patreonBoosts >= 3) {
+            return patreonBoosts;
         }
-        return 1 + Math.max(patreonBoosts, stripeBoosts);
+
+        int otherBoosts = 1;
+        if (!StripeManager.retrieveActiveSubscriptions(userId).isEmpty() ||
+                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty() ||
+                HibernateManager.apply(Database.WEB, entityManager -> !PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty()) ||
+                HibernateManager.apply(Database.BOT, entityManager -> !DiscordSubscriptionEntity.findValidDiscordSubscriptionEntitiesByUserId(entityManager, userId).isEmpty())
+        ) {
+            otherBoosts = 3;
+        }
+        return Math.max(patreonBoosts, otherBoosts);
     }
 
     public static int retrieveUnlockServersNumber(long userId) {
@@ -76,7 +75,7 @@ public class PremiumManager {
             }
         }
 
-        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        EntityManager entityManager = HibernateManager.creasteEntityManager(Database.WEB);
         try {
             for (PremiumCodeEntity premiumCodeEntity : PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId)) {
                 if (premiumCodeEntity.getLevel() == PremiumCodeEntity.Level.PRO) {
@@ -110,7 +109,7 @@ public class PremiumManager {
         }
 
         Map<Long, List<PremiumCodeEntity>> codesMap;
-        EntityManager entityManager = HibernateManager.creasteEntityManager();
+        EntityManager entityManager = HibernateManager.creasteEntityManager(Database.WEB);
         try {
             List<PremiumCodeEntity> premiumCodeEntities = PremiumCodeEntity.findAllActive(entityManager);
             codesMap = premiumCodeEntities.stream()

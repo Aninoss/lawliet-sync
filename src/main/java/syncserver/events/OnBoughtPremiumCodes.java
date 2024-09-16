@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import hibernate.Database;
 import hibernate.HibernateManager;
 import hibernate.entities.PremiumCodeEntity;
 import org.json.JSONArray;
@@ -19,7 +20,7 @@ public class OnBoughtPremiumCodes implements SyncServerFunction {
         JSONObject responseJson = new JSONObject();
         JSONArray codesJson = new JSONArray();
 
-        HibernateManager.run(entityManager -> {
+        HibernateManager.run(Database.WEB, entityManager -> {
             PremiumCodeEntity.findAllBoughtByUserId(entityManager, userId).stream()
                     .filter(c -> !c.isRedeemed())
                     .sorted(Comparator.comparing(PremiumCodeEntity::getCreatedTime))

@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import hibernate.Database;
 import hibernate.HibernateManager;
 import hibernate.entities.PremiumCodeEntity;
 import org.json.JSONArray;
@@ -17,7 +18,7 @@ public class OnRedeemedPremiumCodes implements SyncServerFunction {
         JSONObject responseJson = new JSONObject();
         JSONArray codesJson = new JSONArray();
 
-        HibernateManager.run(entityManager -> {
+        HibernateManager.run(Database.WEB, entityManager -> {
             PremiumCodeEntity.findAllRedeemedByUserId(entityManager, userId)
                     .forEach(code -> {
                         JSONObject codeJson = new JSONObject();

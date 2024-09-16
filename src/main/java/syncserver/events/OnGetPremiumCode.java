@@ -1,5 +1,6 @@
 package syncserver.events;
 
+import hibernate.Database;
 import hibernate.HibernateManager;
 import hibernate.entities.PremiumCodeEntity;
 import org.json.JSONObject;
@@ -14,7 +15,7 @@ public class OnGetPremiumCode implements SyncServerFunction {
         String code = jsonObject.getString("code");
 
         JSONObject responseJson = new JSONObject();
-        HibernateManager.run(entityManager -> {
+        HibernateManager.run(Database.WEB, entityManager -> {
             PremiumCodeEntity premiumCodeEntity = entityManager.find(PremiumCodeEntity.class, code);
             if (premiumCodeEntity != null && !premiumCodeEntity.isRedeemed()) {
                 responseJson.put("level", premiumCodeEntity.getLevel().name());

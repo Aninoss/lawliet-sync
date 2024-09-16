@@ -1,6 +1,7 @@
 package syncserver.events;
 
 import core.util.StringUtil;
+import hibernate.Database;
 import hibernate.HibernateManager;
 import hibernate.entities.PremiumCodeEntity;
 import org.json.JSONObject;
@@ -17,7 +18,7 @@ public class OnCreatePremiumCode implements SyncServerFunction {
         int days = jsonObject.getInt("days");
         int quantity = jsonObject.getInt("quantity");
 
-        HibernateManager.run(entityManager -> {
+        HibernateManager.run(Database.WEB, entityManager -> {
             entityManager.getTransaction().begin();
             for (int i = 0; i < quantity; i++) {
                 PremiumCodeEntity premiumCodeEntity = new PremiumCodeEntity(StringUtil.generateRandomString(20), level, days, userId);

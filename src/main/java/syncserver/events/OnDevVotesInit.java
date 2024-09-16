@@ -1,15 +1,19 @@
 package syncserver.events;
 
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.Objects;
 import core.payments.PremiumManager;
+import hibernate.Database;
+import hibernate.HibernateManager;
+import hibernate.entities.DiscordSubscriptionEntity;
 import mysql.modules.devvotes.DBDevVotes;
 import mysql.modules.devvotes.VoteResultSlot;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import syncserver.SyncServerEvent;
 import syncserver.SyncServerFunction;
+
+import java.sql.SQLException;
+import java.util.Calendar;
+import java.util.Objects;
 
 @SyncServerEvent(event = "DEV_VOTES_INIT")
 public class OnDevVotesInit implements SyncServerFunction {
@@ -20,7 +24,8 @@ public class OnDevVotesInit implements SyncServerFunction {
         int year = jsonObject.getInt("year");
         int month = jsonObject.getInt("month");
         String locale = jsonObject.getString("locale");
-        boolean premium = PremiumManager.userIsPremium(userId);
+        boolean premium = PremiumManager.userIsPremium(userId) ||
+                HibernateManager.apply(Database.BOT, entityManager -> !DiscordSubscriptionEntity.findValidDiscordSubscriptionEntitiesByUserId(entityManager, userId).isEmpty());
 
         JSONObject responseJson = new JSONObject();
         responseJson.put("premium", premium);

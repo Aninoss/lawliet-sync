@@ -11,7 +11,6 @@
         <class>hibernate.entities.PremiumCodeEntity</class>
         <properties>
             <property name="hibernate.ogm.datastore.provider" value="mongodb" />
-            <property name="hibernate.ogm.datastore.database" value="Web" />
             <property name="hibernate.ogm.datastore.create_database" value="true"/>
             <property name="hibernate.create_empty_composites.enabled" value="true"/>
             <property name="org.hibernate.flushMode" value="COMMIT"/>

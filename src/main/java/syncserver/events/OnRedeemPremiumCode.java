@@ -2,6 +2,7 @@ package syncserver.events;
 
 import core.ExceptionLogger;
 import core.payments.PremiumManager;
+import hibernate.Database;
 import hibernate.HibernateManager;
 import hibernate.entities.PremiumCodeEntity;
 import org.json.JSONObject;
@@ -23,7 +24,7 @@ public class OnRedeemPremiumCode implements SyncServerFunction {
         int durationDays = jsonObject.getInt("duration_days");
 
         JSONObject responseJson = new JSONObject();
-        HibernateManager.run(entityManager -> {
+        HibernateManager.run(Database.WEB, entityManager -> {
             PremiumCodeEntity premiumCodeEntity = entityManager.find(PremiumCodeEntity.class, code);
             if (premiumCodeEntity != null && !premiumCodeEntity.isRedeemed()) {
                 entityManager.getTransaction().begin();
