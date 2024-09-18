@@ -2,31 +2,27 @@ package hibernate.entities;
 
 import hibernate.InstantConverter;
 
-import javax.persistence.Convert;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Entity(name = "DiscordSubscription")
 public class DiscordSubscriptionEntity {
 
     public enum SKU { BASIC }
 
     @Id
-    private final String id;
+    private String id = "0";
 
     private long userId = 0;
 
     @Convert(converter = InstantConverter.class)
     private Instant timeEnding = null;
 
+    @Enumerated(EnumType.STRING)
     private SKU sku = SKU.BASIC;
 
-
-    public DiscordSubscriptionEntity(String id) {
-        this.id = id;
-    }
 
     public String getId() {
         return id;

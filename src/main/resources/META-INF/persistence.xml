@@ -9,6 +9,7 @@
         <provider>org.hibernate.ogm.jpa.HibernateOgmPersistence</provider>
 
         <class>hibernate.entities.PremiumCodeEntity</class>
+        <class>hibernate.entities.DiscordSubscriptionEntity</class>
         <properties>
             <property name="hibernate.ogm.datastore.provider" value="mongodb" />
             <property name="hibernate.ogm.datastore.create_database" value="true"/>
