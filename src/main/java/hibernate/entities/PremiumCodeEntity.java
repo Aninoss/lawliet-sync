@@ -29,6 +29,8 @@ public class PremiumCodeEntity {
     @Convert(converter = InstantConverter.class)
     private Instant expiration = null;
 
+    private Boolean notificationSent = null;
+
     public PremiumCodeEntity() {
     }
 
@@ -101,6 +103,14 @@ public class PremiumCodeEntity {
 
     public boolean isActive() {
         return isRedeemed() && Instant.now().isBefore(expiration);
+    }
+
+    public boolean getNotificationSent() {
+        return notificationSent != null && notificationSent;
+    }
+
+    public void setNotificationSent(Boolean notificationSent) {
+        this.notificationSent = notificationSent;
     }
 
     public static List<PremiumCodeEntity> findAllBoughtByUserId(EntityManager entityManager, long userId) {
