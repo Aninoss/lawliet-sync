@@ -23,6 +23,7 @@ public class OnDevVotesInit implements SyncServerFunction {
         long userId = jsonObject.getLong("user_id");
         int year = jsonObject.getInt("year");
         int month = jsonObject.getInt("month");
+
         String locale = jsonObject.getString("locale");
         boolean premium = PremiumManager.userIsPremium(userId) ||
                 HibernateManager.apply(Database.BOT, entityManager -> !DiscordSubscriptionEntity.findValidDiscordSubscriptionEntitiesByUserId(entityManager, userId).isEmpty());
@@ -34,7 +35,7 @@ public class OnDevVotesInit implements SyncServerFunction {
             Boolean active = DBDevVotes.reminderIsActive(userId);
             responseJson.put("reminder_active", Objects.requireNonNullElse(active, true));
 
-            if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) < 8) {
+            if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) < 8 && Calendar.getInstance().get(Calendar.MONTH) != Calendar.JANUARY) {
                 JSONArray votesJsonArray = new JSONArray();
                 for (String userVote : DBDevVotes.getUserVotes(userId, year, month)) {
                     votesJsonArray.put(userVote);
