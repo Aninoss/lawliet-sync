@@ -20,15 +20,15 @@ import java.util.stream.Collectors;
 public class HealthScheduler {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HealthScheduler.class);
-    private static final WebhookClient exceptionClient = WebhookClient.withUrl(System.getenv("EXCEPTION_WEBHOOK_URL"));
+    private static final WebhookClient exceptionClient = WebhookClientInterceptor.withUrl(System.getenv("EXCEPTION_WEBHOOK_URL"));
 
     public static void run() {
         if (!Program.isProductionMode()) {
             return;
         }
 
-        WebhookClient publicClient = WebhookClient.withUrl(System.getenv("PUBLIC_HEALTH_WEBHOOK_URL"));
-        WebhookClient privateClient = WebhookClient.withUrl(System.getenv("HEALTH_WEBHOOK_URL"));
+        WebhookClient publicClient = WebhookClientInterceptor.withUrl(System.getenv("PUBLIC_HEALTH_WEBHOOK_URL"));
+        WebhookClient privateClient = WebhookClientInterceptor.withUrl(System.getenv("HEALTH_WEBHOOK_URL"));
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.scheduleAtFixedRate(() -> {

@@ -7,6 +7,7 @@ import club.minnced.discord.webhook.send.WebhookMessage;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import core.ExceptionLogger;
 import core.Program;
+import core.WebhookClientInterceptor;
 import core.util.StringUtil;
 import org.json.JSONObject;
 import syncserver.ClusterConnectionManager;
@@ -21,7 +22,7 @@ import java.util.ArrayList;
 @SyncServerEvent(event = "EXCEPTION")
 public class OnException implements SyncServerFunction {
 
-    private final WebhookClient webhookClient = WebhookClient.withUrl(System.getenv("EXCEPTION_WEBHOOK_URL"));
+    private final WebhookClient webhookClient = WebhookClientInterceptor.withUrl(System.getenv("EXCEPTION_WEBHOOK_URL"));
     private final ArrayList<Instant> cache = new ArrayList<>();
     private final int CACHE_SIZE = Integer.parseInt(System.getenv("EXCEPTION_CACHE_SIZE"));
     private final int CACHE_TIME_MINUTES = Integer.parseInt(System.getenv("EXCEPTION_CACHE_TIME_MINUTES"));
@@ -35,28 +36,37 @@ public class OnException implements SyncServerFunction {
             return null;
         }
 
+        String message = jsonObject.getString("message").replace("\tat ", "- ");
+        if (message.contains("OutOfMemoryError")) {
+            blockUntil = Instant.now().plus(Duration.ofMinutes(BLOCK_TIME_MINUTES));
+            sendErrorMessage(clusterId, message);
+            return null;
+        }
+
         cache.add(Instant.now());
-        if (cache.size() > CACHE_SIZE) {
-            if (cache.remove(0).plus(Duration.ofMinutes(CACHE_TIME_MINUTES)).isAfter(Instant.now()) &&
-                    Instant.now().isAfter(blockUntil)
-            ) {
-                blockUntil = Instant.now().plus(Duration.ofMinutes(BLOCK_TIME_MINUTES));
-                String message = jsonObject.getString("message").replace("\tat ", "- ");
-                WebhookEmbed webhookEmbed = new WebhookEmbedBuilder()
-                        .setTitle(new WebhookEmbed.EmbedTitle("Exception Alert (Cluster " + clusterId + ")", null))
-                        .setDescription(StringUtil.shortenString(message, 1024))
-                        .setColor(Color.RED.getRGB())
-                        .build();
-                WebhookMessage webhookMessage = new WebhookMessageBuilder()
-                        .setContent("<@" + ClusterConnectionManager.OWNER_ID + ">")
-                        .addEmbeds(webhookEmbed)
-                        .build();
-                webhookClient.send(webhookMessage)
-                        .exceptionally(ExceptionLogger.get());
-            }
+        if (cache.size() > CACHE_SIZE &&
+                cache.remove(0).plus(Duration.ofMinutes(CACHE_TIME_MINUTES)).isAfter(Instant.now()) &&
+                Instant.now().isAfter(blockUntil)
+        ) {
+            blockUntil = Instant.now().plus(Duration.ofMinutes(BLOCK_TIME_MINUTES));
+            sendErrorMessage(clusterId, message);
         }
 
         return null;
+    }
+
+    private void sendErrorMessage(int clusterId, String message) {
+        WebhookEmbed webhookEmbed = new WebhookEmbedBuilder()
+                .setTitle(new WebhookEmbed.EmbedTitle("Exception Alert (Cluster " + clusterId + ")", null))
+                .setDescription(StringUtil.shortenString(message, 1024))
+                .setColor(Color.RED.getRGB())
+                .build();
+        WebhookMessage webhookMessage = new WebhookMessageBuilder()
+                .setContent("<@" + ClusterConnectionManager.OWNER_ID + ">")
+                .addEmbeds(webhookEmbed)
+                .build();
+        webhookClient.send(webhookMessage)
+                .exceptionally(ExceptionLogger.get());
     }
 
 }
