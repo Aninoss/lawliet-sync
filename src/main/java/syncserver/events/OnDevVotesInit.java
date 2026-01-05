@@ -35,7 +35,7 @@ public class OnDevVotesInit implements SyncServerFunction {
             Boolean active = DBDevVotes.reminderIsActive(userId);
             responseJson.put("reminder_active", Objects.requireNonNullElse(active, true));
 
-            if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) < 8 && Calendar.getInstance().get(Calendar.MONTH) != Calendar.JANUARY) {
+            if (Calendar.getInstance().get(Calendar.DAY_OF_MONTH) < 8) {
                 JSONArray votesJsonArray = new JSONArray();
                 for (String userVote : DBDevVotes.getUserVotes(userId, year, month)) {
                     votesJsonArray.put(userVote);
