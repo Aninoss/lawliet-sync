@@ -41,7 +41,7 @@ public class PaddleSubscription {
         return userId;
     }
 
-    public boolean unlocksServer() {
+    public boolean getUnlocksServer() {
         return unlocksServer;
     }
 

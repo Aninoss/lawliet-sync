@@ -3,6 +3,7 @@ package core;
 import com.stripe.Stripe;
 import core.payments.PatreonCache;
 import core.payments.paddle.PaddleCache;
+import core.payments.paddlebilling.PaddleBillingCache;
 import core.payments.stripe.StripeCache;
 import hibernate.HibernateManager;
 import mysql.DBMain;
@@ -22,6 +23,7 @@ public class Main {
             Console.getInstance().start();
             DBMain.getInstance().connect();
             HibernateManager.connect();
+            PaddleBillingCache.startScheduler();
             PaddleCache.startScheduler();
             StripeCache.startScheduler();
             PatreonCache.getInstance().fetch();

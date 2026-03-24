@@ -4,6 +4,8 @@ import com.stripe.model.Subscription;
 import core.Program;
 import core.payments.paddle.PaddleManager;
 import core.payments.paddle.PaddleSubscription;
+import core.payments.paddlebilling.PaddleBillingManager;
+import core.payments.paddlebilling.PaddleBillingSubscription;
 import core.payments.stripe.StripeManager;
 import hibernate.Database;
 import hibernate.HibernateManager;
@@ -29,7 +31,8 @@ public class PremiumManager {
         if (!Program.isProductionMode() ||
                 PatreonCache.getInstance().getUserTier(userId) > 0 ||
                 !StripeManager.retrieveActiveSubscriptions(userId).isEmpty() ||
-                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()
+                !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty() ||
+                !PaddleBillingManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty()
         ) {
             return true;
         }
@@ -51,6 +54,7 @@ public class PremiumManager {
         int otherBoosts = 1;
         if (!StripeManager.retrieveActiveSubscriptions(userId).isEmpty() ||
                 !PaddleManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty() ||
+                !PaddleBillingManager.retrieveActiveSubscriptionsByUserId(userId).isEmpty() ||
                 HibernateManager.apply(Database.WEB, entityManager -> !PremiumCodeEntity.findAllActiveRedeemedByUserId(entityManager, userId).isEmpty()) ||
                 HibernateManager.apply(Database.BOT, entityManager -> !DiscordSubscriptionEntity.findValidDiscordSubscriptionEntitiesByUserId(entityManager, userId).isEmpty())
         ) {
@@ -70,7 +74,13 @@ public class PremiumManager {
         }
 
         for (PaddleSubscription subscription : PaddleManager.retrieveActiveSubscriptionsByUserId(userId)) {
-            if (subscription.unlocksServer()) {
+            if (subscription.getUnlocksServer()) {
+                n += subscription.getQuantity();
+            }
+        }
+
+        for (PaddleBillingSubscription subscription : PaddleBillingManager.retrieveActiveSubscriptionsByUserId(userId)) {
+            if (subscription.getUnlocksGuilds()) {
                 n += subscription.getQuantity();
             }
         }
@@ -108,6 +118,11 @@ public class PremiumManager {
             patreonTiers.putIfAbsent(userId, 2);
         }
 
+        Map<Long, ArrayList<PaddleBillingSubscription>> paddleBillingMap = PaddleBillingManager.retrieveActiveSubscriptions();
+        for (long userId : paddleBillingMap.keySet()) {
+            patreonTiers.putIfAbsent(userId, 2);
+        }
+
         Map<Long, List<PremiumCodeEntity>> codesMap;
         EntityManager entityManager = HibernateManager.creasteEntityManager(Database.WEB);
         try {
@@ -141,8 +156,14 @@ public class PremiumManager {
             }
             if (paddleMap.containsKey(userId)) {
                 slots += paddleMap.get(userId).stream()
-                        .filter(PaddleSubscription::unlocksServer)
+                        .filter(PaddleSubscription::getUnlocksServer)
                         .mapToInt(PaddleSubscription::getQuantity)
+                        .sum();
+            }
+            if (paddleBillingMap.containsKey(userId)) {
+                slots += paddleBillingMap.get(userId).stream()
+                        .filter(PaddleBillingSubscription::getUnlocksGuilds)
+                        .mapToInt(PaddleBillingSubscription::getQuantity)
                         .sum();
             }
             if (codesMap.containsKey(userId)) {

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class PaddleAPI {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(PaddleAPI.class);
-    private static final String USER_AGENT = "Lawliet Discord Bot made by Aninoss#7220";
+    private static final String USER_AGENT = "Lawliet Discord Bot by @aninoss";
 
     private static final OkHttpClient client;
 
