@@ -35,7 +35,7 @@ public class PaddleBillingAPI {
     }
 
     public static List<JSONObject> retrieveSubscriptions(String subscriptionId) throws IOException {
-        String parameters = "?per_page=200&status=active";
+        String parameters = "?per_page=200";
         if (subscriptionId != null) {
             parameters += "&id=" + subscriptionId;
         }

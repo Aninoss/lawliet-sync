@@ -26,4 +26,11 @@ public class PaddleBillingManager {
                 .collect(Collectors.toList());
     }
 
+    public static List<PaddleBillingSubscription> retrieveSubscriptionsByUserId(long userId) {
+        return PaddleBillingCache.getSubscriptions()
+                .stream()
+                .filter(sub -> userId == 0L || sub.getUserId() == userId)
+                .collect(Collectors.toList());
+    }
+
 }

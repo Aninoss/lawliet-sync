@@ -54,16 +54,17 @@ public class PaddleBillingSubscription {
         return presetGuilds;
     }
 
-    public static PaddleBillingSubscription fromJson(JSONObject dataJson) {
-        JSONObject customData = dataJson.optJSONObject("custom_data");
+    public static PaddleBillingSubscription fromJson(JSONObject data) {
+        JSONObject customData = data.getJSONObject("custom_data");
+        JSONObject priceCustomData = data.getJSONArray("items").getJSONObject(0).getJSONObject("price").getJSONObject("custom_data");
         return new PaddleBillingSubscription(
-                dataJson.getString("id"),
-                dataJson.getString("customer_id"),
-                dataJson.getJSONArray("items").getJSONObject(0).getInt("quantity"),
-                dataJson.getString("status"),
+                data.getString("id"),
+                data.getString("customer_id"),
+                data.getJSONArray("items").getJSONObject(0).getInt("quantity"),
+                data.getString("status"),
                 customData.getLong("discord_id"),
-                customData.getBoolean("unlocks_guilds"),
-                customData.isNull("preset_guilds") ? null : Stream.of(customData.getString("preset_guilds").split(",")).map(Long::valueOf).collect(Collectors.toList())
+                priceCustomData.getBoolean("unlocks_guilds"),
+                customData.isNull("preset_guilds") || customData.getString("preset_guilds").isEmpty() ? null : Stream.of(customData.getString("preset_guilds").split(",")).map(Long::valueOf).collect(Collectors.toList())
         );
     }
 

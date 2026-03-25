@@ -1,5 +1,6 @@
 package core.payments.paddlebilling;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +49,12 @@ public class PaddleBillingCache {
             subscriptionMap.clear();
         }
         for (JSONObject json : subscriptions) {
-            PaddleBillingSubscription paddleBillingSubscription = PaddleBillingSubscription.fromJson(json);
-            subscriptionMap.put(paddleBillingSubscription.getSubscriptionId(), paddleBillingSubscription);
+            try {
+                PaddleBillingSubscription paddleBillingSubscription = PaddleBillingSubscription.fromJson(json);
+                subscriptionMap.put(paddleBillingSubscription.getSubscriptionId(), paddleBillingSubscription);
+            } catch (JSONException e) {
+                LOGGER.error("Could not create paddle billing object:\n{}", json, e);
+            }
         }
 
         LOGGER.info("Paddle billing load successful ({})", subscriptionMap.size());

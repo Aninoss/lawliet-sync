@@ -25,7 +25,7 @@ public class OnPaddleBillingSubscriptions implements SyncServerFunction {
         }
 
         JSONArray subsJson = new JSONArray();
-        for (PaddleBillingSubscription subscription : PaddleBillingManager.retrieveActiveSubscriptionsByUserId(userId)) {
+        for (PaddleBillingSubscription subscription : PaddleBillingManager.retrieveSubscriptionsByUserId(userId)) {
             JSONObject subJson = new JSONObject();
             subJson.put("subscription_id", subscription.getSubscriptionId());
             subJson.put("customer_id", subscription.getCustomerId());
