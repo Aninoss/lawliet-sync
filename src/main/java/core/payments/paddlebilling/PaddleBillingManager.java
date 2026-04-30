@@ -22,7 +22,7 @@ public class PaddleBillingManager {
     public static List<PaddleBillingSubscription> retrieveActiveSubscriptionsByUserId(long userId) {
         return PaddleBillingCache.getSubscriptions()
                 .stream()
-                .filter(sub -> (userId == 0L || sub.getUserId() == userId) && sub.getStatus().equals("active"))
+                .filter(sub -> (userId == 0L || sub.getUserId() == userId) && sub.isActive())
                 .collect(Collectors.toList());
     }
 

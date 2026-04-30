@@ -42,6 +42,10 @@ public class PaddleBillingSubscription {
         return status;
     }
 
+    public boolean isActive() {
+        return status.equals("active") || status.equals("past_due");
+    }
+
     public long getUserId() {
         return userId;
     }
